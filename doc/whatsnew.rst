@@ -4,21 +4,76 @@ What's new
 Next release
 ============
 
-- Support for :mod:`ixmp` and :mod:`message_ix` versions 3.4.x and 3.5.x is dropped in accordance with the :ref:`policy-upstream-versions` (:pull:`288`).
-  The minimum version of both packages is 3.6.0.
+- In accordance with the :ref:`policy-upstream-versions`:
+
+  - :mod:`message_ix_models` supports and is tested against :mod:`ixmp` and :mod:`message_ix_models` version 3.10.0 (:pull:`299`).
+  - Support for :mod:`ixmp` and :mod:`message_ix` versions 3.4, 3.5, and 3.6 is dropped  (:pull:`288`, :pull:`289`).
+    The minimum supported version of both packages is 3.7.0.
+
 - Update :class:`.IEA_EWEB` to support :py:`transform="B"` / :func:`.transform_B` (:issue:`230`, :pull:`259`).
-- Update :doc:`/transport/index` (:pull:`259`).
 
-  - Adjust constraints on :py:`t="conm_ar"`.
-  - Recompute :attr:`.minimum_activity` for transport technologies.
+- New utility :class:`.sdmx.AnnotationsMixIn` (:pull:`259`).
+- Drop obsolete :py:`series_of_pint_quantity()` (:pull:`289`).
+
+By topic:
+
+.. contents::
+   :local:
+   :backlinks: none
+
+SSP :ref:`ssp-2024`/ScenarioMIP
+-------------------------------
+
+Improve :mod:`.ssp.transport`:
+
+- Add :func:`.prepare_method_B` and make this the default (:pull:`259`).
+- Add :func:`~.ssp.transport.process_df` (:pull:`303`).
+- Adapt to revised ‘variable’ codes (:pull:`309`, :issue:`304`).
+
+Transport
+---------
+
+Update :doc:`/transport/index` (:pull:`259`, :pull:`289`).
+
+- Adjust constraints on :py:`t="conm_ar"`.
+- Recompute :attr:`.minimum_activity` for transport technologies.
+- Improve freight representation:
+
   - Adjust freight activity, freight and passenger mode shares for some regions.
-  - Drop :file:`base-scenario-url.json`; store base scenario URLs in :ref:`CL_TRANSPORT_SCENARIO`.
-  - Simplify and consolidate tests.
+  - Add dynamic constraints on activity of freight technologies.
+  - Fix alignment of freight technology outputs with demand |l|.
 
-- Add :func:`.prepare_method_B` to :mod:`.ssp.transport` (:pull:`259`).
+- Implement LED override using exogenous passenger activity data from :ref:`transport-pdt-cap-proj`.
+- Drop :file:`base-scenario-url.json`; store base scenario URLs in :ref:`CL_TRANSPORT_SCENARIO`.
+- Generate SDMX-ML structural metadata, including data flow definitions, and SDMX-{CSV,ML} data outputs for certain reported quantities.
+- Expand use of fixed/shared keys from :mod:`.transport.key`.
+- Simplify and consolidate tests.
+- Improve :func:`.simulated_solution` to load ‘simulated’ solution data from file to reduce test durations.
+
+Documentation
+-------------
+
 - New :doc:`/howto/index` documentation sub-tree (:pull:`291`).
 - New guide on HOWTO :doc:`/howto/unicc` (:pull:`279`) and supporting command :program:`mix-models sbatch` in :mod:`.util.slurm` (:pull:`291`).
+- New summary pages for projects
+  :doc:`project/alps`,
+  :doc:`project/carbon-direct`,
+  :doc:`project/cfr`,
+  :doc:`project/ecemf`,
+  :doc:`project/elevate`,
+  :doc:`project/geidco`,
+  :doc:`project/genie`,
+  :doc:`project/guide`,
+  :doc:`project/hyway`,
+  :doc:`project/newpathways`,
+  :doc:`project/nextgen-carbon`,
+  :doc:`project/ngfs`,
+  :doc:`project/prisma`,
+  :doc:`project/sparccle`, and
+  :doc:`project/uptake` (:pull:`282`).
+
 - New utility :class:`.sdmx.AnnotationsMixIn` (:pull:`259`).
+- Bug fix: adjust or guard some Python usage that was not compatible with Python 3.9—the earliest version supported by :mod:`message_ix_models` (:pull:`295`, :issue:`294`).
 
 v2025.1.10
 ==========
@@ -413,12 +468,12 @@ Earlier releases
 2021.7.27
 ---------
 
-- Improve caching using  mod:`genno` v1.8.0 (:pull:`29`).
+- Improve caching using :mod:`genno` v1.8.0 (:pull:`29`).
 
 2021.7.22
 ---------
 
-- Migrate utilities :func:`.cached`, :func:`.check_support`, :func:`.convert_units`, :func:`.maybe_query`, :func:`.series_of_pint_quantity` (:pull:`27`)
+- Migrate utilities :func:`.cached`, :func:`.check_support`, :func:`.convert_units`, :func:`.maybe_query`, :py:`series_of_pint_quantity()` (:pull:`27`)
 - Add :data:`.testing.NIE`.
 - Add the ``--jvmargs`` option to :command:`pytest` (see :func:`.pytest_addoption`).
 - Remove :py:`.Context.get_config_file()`, :py:`.get_path()`, :py:`.load_config()`, and :py:`.units`, all deprecated since 2021-02-28.

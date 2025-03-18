@@ -10,16 +10,22 @@
 /message_ix_models/workflow.py             @khaeru @glatterf42
 /message_ix_models/tests/test_workflow.py  @khaeru @glatterf42
 
-/doc/api/tools-costs.rst              @measrainsey
-/message_ix_models/data/costs         @measrainsey
-/message_ix_models/data/intratec      @measrainsey
-/message_ix_models/tests/tools/costs  @measrainsey
-/message_ix_models/tools/costs        @measrainsey
+# Colleagues responsible for module-specific cost data
+/message_ix_models/data/costs/cooling   @adrivinca
+/message_ix_models/data/costs/dac       @ywpratama
+/message_ix_models/data/costs/material  @macflo8
 
-/doc/material                            @GamzeUnlu95 @macflo8
-/message_ix_models/data/material         @GamzeUnlu95 @macflo8
-/message_ix_models/model/material        @GamzeUnlu95 @macflo8
-/message_ix_models/tests/model/material  @GamzeUnlu95 @macflo8
+# All of the above + others
+/doc/api/tools-costs.rst              @adrivinca @macflo8 @OFR-IIASA @ywpratama
+/message_ix_models/data/costs         @adrivinca @macflo8 @OFR-IIASA @ywpratama
+/message_ix_models/data/intratec      @adrivinca @macflo8 @OFR-IIASA @ywpratama
+/message_ix_models/tests/tools/costs  @adrivinca @macflo8 @OFR-IIASA @ywpratama
+/message_ix_models/tools/costs        @adrivinca @macflo8 @OFR-IIASA @ywpratama
+
+/doc/material                            @macflo8
+/message_ix_models/data/material         @macflo8
+/message_ix_models/model/material        @macflo8
+/message_ix_models/tests/model/material  @macflo8
 
 /doc/transport
 /message_ix_models/data/transport         @khaeru @r-aneeque
@@ -32,13 +38,39 @@
 /message_ix_models/tests/model/water  @adrivinca @awais307
 
 # /message_ix_models/project/advance
-# /message_ix_models/project/circeular
+
+/doc/project/alps.rst           @byersiiasa @giacfalk @amastrucci
+/doc/project/carbon-direct.rst  @ywpratama
+/doc/project/cfr.rst            @AlKhourdajie
+
+/doc/project/circeular.rst            @amastrucci @r-aneeque
+/message_ix_models/project/circeular  @amastrucci @r-aneeque
+
+/doc/project/ecemf.rst  @behnam-zakeri
+
 # /message_ix_models/project/edits
-# /message_ix_models/project/engage
+
+/doc/project/elevate.rst  @setupelz
+
 # /message_ix_models/project/gea
+
+/doc/project/geidco.rst  @adrivinca
+/doc/project/genie.rst   @sreyam-sengupta @ywpratama
+/doc/project/guide.rst   @OFR-IIASA @SiddharthJoshi-Git
+/doc/project/hyway.rst   @Tyler-lc
 
 /doc/project/navigate.rst            @khaeru
 /message_ix_models/project/navigate  @khaeru
 
-# /message_ix_models/project/shape
-# /message_ix_models/project/ssp
+/doc/project/newpathways.rst  @yiyi1991 @amastrucci @r-aneeque
+
+# /doc/project/nextgen-carbon.rst
+
+/doc/project/ngfs.rst    @yiyi1991
+/doc/project/prisma.rst  @amastrucci @macflo8 @sreyam-sengupta @adrivinca
+
+# /doc/project/shape.rst
+
+/doc/project/sparccle.rst @adrivinca
+/doc/project/ssp.rst      @OFR-IIASA
+/doc/project/uptake.rst   @ywpratama

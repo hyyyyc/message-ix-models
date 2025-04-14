@@ -345,12 +345,12 @@ def derive_demand(material, scen, old_gdp=False, ssp="SSP2"):
 
     if material == "cement":
         infrastructure_demand = get_inf_mat_demand(
-            "concrete", "2020", INPUTFILE, case=CASE_SENS, infra_scenario=INFRA_SCEN
+            "concrete", "2020", infra_scenario=INFRA_SCEN, case=CASE_SENS,
         )
         infrastructure_demand["value"] *= 0.15
     else:
         infrastructure_demand = get_inf_mat_demand(
-            material, "2020", INPUTFILE, case=CASE_SENS, infra_scenario=INFRA_SCEN
+            material, "2020", INPUTFILE, infra_scenario=INFRA_SCEN,  case=CASE_SENS,
         )
 
     infrastructure_demand["year"] = infrastructure_demand["year"].astype("int64")

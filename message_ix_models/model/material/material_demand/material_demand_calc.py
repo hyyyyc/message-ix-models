@@ -101,7 +101,7 @@ def gompertz(phi, mu, y, baseyear=2020):
 
 def read_timer_pop(datapath, material):
     df_population = pd.read_excel(
-        f'{datapath}/{material_data[material]["dir"]}{material_data[material]["file"]}',
+        f"{datapath}/{material_data[material]['dir']}{material_data[material]['file']}",
         sheet_name="Timer_POP",
         skiprows=[0, 1, 2, 30],
         nrows=26,
@@ -118,7 +118,7 @@ def read_timer_pop(datapath, material):
 def read_timer_gdp(datapath, material):
     # Read GDP per capita data
     df_gdp = pd.read_excel(
-        f'{datapath}/{material_data[material]["dir"]}{material_data[material]["file"]}',
+        f"{datapath}/{material_data[material]['dir']}{material_data[material]['file']}",
         sheet_name="Timer_GDPCAP",
         skiprows=[0, 1, 2, 30],
         nrows=26,
@@ -194,7 +194,7 @@ def read_hist_mat_demand(material):
     if material == "aluminum":
         df_raw_cons = (
             pd.read_excel(
-                f'{datapath}/{material_data[material]["dir"]}{material_data[material]["file"]}',
+                f"{datapath}/{material_data[material]['dir']}{material_data[material]['file']}",
                 sheet_name="final_table",
                 nrows=378,
             )
@@ -212,7 +212,7 @@ def read_hist_mat_demand(material):
         )
     elif material == "steel":
         df_raw_cons = pd.read_excel(
-            f'{datapath}/{material_data[material]["dir"]}{material_data[material]["file"]}',
+            f"{datapath}/{material_data[material]['dir']}{material_data[material]['file']}",
             sheet_name="Consumption regions",
             nrows=26,
         )
@@ -245,7 +245,7 @@ def read_hist_mat_demand(material):
         )
     elif material == "cement":
         df_raw_cons = pd.read_excel(
-            f'{datapath}/{material_data[material]["dir"]}{material_data[material]["file"]}',
+            f"{datapath}/{material_data[material]['dir']}{material_data[material]['file']}",
             sheet_name="Regions",
             skiprows=122,
             nrows=26,
@@ -334,7 +334,7 @@ def derive_demand(material, scen, old_gdp=False, ssp="SSP2"):
 
     # get base year demand of material
     df_base_demand_original = read_base_demand(
-        f'{datapath}/{material_data[material]["dir"]}/demand_{material}.yaml'
+        f"{datapath}/{material_data[material]['dir']}/demand_{material}.yaml"
     )
 
     # In 2020 deduct the demand from infrastructure
@@ -345,12 +345,19 @@ def derive_demand(material, scen, old_gdp=False, ssp="SSP2"):
 
     if material == "cement":
         infrastructure_demand = get_inf_mat_demand(
-            "concrete", "2020", infra_scenario=INFRA_SCEN, case=CASE_SENS,
+            "concrete",
+            "2020",
+            infra_scenario=INFRA_SCEN,
+            case=CASE_SENS,
         )
         infrastructure_demand["value"] *= 0.15
     else:
         infrastructure_demand = get_inf_mat_demand(
-            material, "2020", INPUTFILE, infra_scenario=INFRA_SCEN,  case=CASE_SENS,
+            material,
+            "2020",
+            INPUTFILE,
+            infra_scenario=INFRA_SCEN,
+            case=CASE_SENS,
         )
 
     infrastructure_demand["year"] = infrastructure_demand["year"].astype("int64")

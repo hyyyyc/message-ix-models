@@ -1,0 +1,14 @@
+﻿id,source,recipient,status,vol_yr,length,energy_con,invest_cost
+1,Yangtze,China Coast,Existing,7.72,309.85,3.30E+02,0
+2,Yangtze,Ziya He Interior,Existing,5.73,1178.88,2.43E+03,0
+3,Yangtze,China Coast,Existing,3.38,1236.5,3.94E+02,0
+4,Huang He,Ziya He Interior,Existing,3.02,415.9,0.00E+00,0
+5,Huang He,Ziya He Interior,Existing,1.89,665.02,5.59E+02,0
+6,Yangtze,Huang He,Existing,1.88,484.5,0.00E+00,0
+7,Yangtze,Ziya He Interior,Existing,0.93,731.81,1.27E+02,0
+8,Yangtze,Huang He,Existing,0.93,598.15,1.27E+02,0
+9,Ob,Gobi Interior,Existing,0.84,327.84,2.12E+02,0
+10,Huang He,Yangtze,Existing,0.75,221.11,0.00E+00,0
+11,Yangtze,Huang He,Planned,17.4,883.68,1.06E+05,723.3
+12,Ganges Bramaputra,Huang He,Planned,25,2884.72,6.69E+04,600
+13,Yangtze,Huang He,Planned,20,777.3,1.17E+04,107

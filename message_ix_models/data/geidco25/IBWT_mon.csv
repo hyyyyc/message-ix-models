@@ -1,0 +1,157 @@
+﻿id,source,recipient,status,time,vol_yr,runoff,vol_mon
+1,Yangtze,China Coast,Existing,1,7.72,46.046056,0.291566588
+1,Yangtze,China Coast,Existing,2,7.72,48.407726,0.306520835
+1,Yangtze,China Coast,Existing,3,7.72,74.086165,0.469118362
+1,Yangtze,China Coast,Existing,4,7.72,97.072668,0.614670378
+1,Yangtze,China Coast,Existing,5,7.72,132.570034,0.839441983
+1,Yangtze,China Coast,Existing,6,7.72,174.728938,1.106394874
+1,Yangtze,China Coast,Existing,7,7.72,181.399557,1.148633663
+1,Yangtze,China Coast,Existing,8,7.72,142.884207,0.904751989
+1,Yangtze,China Coast,Existing,9,7.72,114.418885,0.72450774
+1,Yangtze,China Coast,Existing,10,7.72,89.810121,0.568683463
+1,Yangtze,China Coast,Existing,11,7.72,68.031734,0.430781316
+1,Yangtze,China Coast,Existing,12,7.72,49.735567,0.314928809
+2,Yangtze,Ziya He interior,Existing,1,5.73,0.894802,0.11717342
+2,Yangtze,Ziya He interior,Existing,2,5.73,0.869659,0.11388097
+2,Yangtze,Ziya He interior,Existing,3,5.73,1.712559,0.224257875
+2,Yangtze,Ziya He interior,Existing,4,5.73,2.948241,0.386069188
+2,Yangtze,Ziya He interior,Existing,5,5.73,4.044866,0.529671126
+2,Yangtze,Ziya He interior,Existing,6,5.73,4.391159,0.575017845
+2,Yangtze,Ziya He interior,Existing,7,5.73,6.946454,0.90963115
+2,Yangtze,Ziya He interior,Existing,8,5.73,6.002041,0.78596122
+2,Yangtze,Ziya He interior,Existing,9,5.73,6.411617,0.839594784
+2,Yangtze,Ziya He interior,Existing,10,5.73,5.189427,0.679550235
+2,Yangtze,Ziya He interior,Existing,11,5.73,2.866914,0.375419499
+2,Yangtze,Ziya He interior,Existing,12,5.73,1.479757,0.193772688
+3,Yangtze,China Coast,Existing,1,3.38,46.046056,0.127654802
+3,Yangtze,China Coast,Existing,2,3.38,48.407726,0.134202127
+3,Yangtze,China Coast,Existing,3,3.38,74.086165,0.2053912
+3,Yangtze,China Coast,Existing,4,3.38,97.072668,0.269117342
+3,Yangtze,China Coast,Existing,5,3.38,132.570034,0.367527707
+3,Yangtze,China Coast,Existing,6,3.38,174.728938,0.484406046
+3,Yangtze,China Coast,Existing,7,3.38,181.399557,0.502899194
+3,Yangtze,China Coast,Existing,8,3.38,142.884207,0.396121985
+3,Yangtze,China Coast,Existing,9,3.38,114.418885,0.317206756
+3,Yangtze,China Coast,Existing,10,3.38,89.810121,0.248983174
+3,Yangtze,China Coast,Existing,11,3.38,68.031734,0.188606327
+3,Yangtze,China Coast,Existing,12,3.38,49.735567,0.137883339
+4,Huang He,Ziya He interior,Existing,1,3.02,4.975242,0.121512127
+4,Huang He,Ziya He interior,Existing,2,3.02,4.490979,0.109684797
+4,Huang He,Ziya He interior,Existing,3,3.02,5.684062,0.138823893
+4,Huang He,Ziya He interior,Existing,4,3.02,6.937986,0.16944893
+4,Huang He,Ziya He interior,Existing,5,3.02,10.505534,0.256580439
+4,Huang He,Ziya He interior,Existing,6,3.02,13.252261,0.323664742
+4,Huang He,Ziya He interior,Existing,7,3.02,18.307814,0.447138333
+4,Huang He,Ziya He interior,Existing,8,3.02,17.167307,0.419283319
+4,Huang He,Ziya He interior,Existing,9,3.02,16.283872,0.397706868
+4,Huang He,Ziya He interior,Existing,10,3.02,12.727509,0.310848534
+4,Huang He,Ziya He interior,Existing,11,3.02,7.545057,0.184275643
+4,Huang He,Ziya He interior,Existing,12,3.02,5.774487,0.141032375
+5,Huang He,Ziya He interior,Existing,1,1.89,4.834713,0.075365941
+5,Huang He,Ziya He interior,Existing,2,1.89,4.373283,0.068172938
+5,Huang He,Ziya He interior,Existing,3,1.89,5.559875,0.086670132
+5,Huang He,Ziya He interior,Existing,4,1.89,6.820114,0.106315372
+5,Huang He,Ziya He interior,Existing,5,1.89,10.380193,0.161811676
+5,Huang He,Ziya He interior,Existing,6,1.89,13.120795,0.20453356
+5,Huang He,Ziya He interior,Existing,7,1.89,17.934271,0.279568448
+5,Huang He,Ziya He interior,Existing,8,1.89,16.778697,0.261554779
+5,Huang He,Ziya He interior,Existing,9,1.89,15.996471,0.249361046
+5,Huang He,Ziya He interior,Existing,10,1.89,12.492241,0.194735344
+5,Huang He,Ziya He interior,Existing,11,1.89,7.348766,0.114556265
+5,Huang He,Ziya He interior,Existing,12,1.89,5.603777,0.087354498
+6,Yangtze,Huang He,Existing,1,1.88,0.894802,0.038444333
+6,Yangtze,Huang He,Existing,2,1.88,0.869659,0.037364088
+6,Yangtze,Huang He,Existing,3,1.88,1.712559,0.0735785
+6,Yangtze,Huang He,Existing,4,1.88,2.948241,0.126668425
+6,Yangtze,Huang He,Existing,5,1.88,4.044866,0.173783895
+6,Yangtze,Huang He,Existing,6,1.88,4.391159,0.18866205
+6,Yangtze,Huang He,Existing,7,1.88,6.946454,0.298447917
+6,Yangtze,Huang He,Existing,8,1.88,6.002041,0.257872093
+6,Yangtze,Huang He,Existing,9,1.88,6.411617,0.275469144
+6,Yangtze,Huang He,Existing,10,1.88,5.189427,0.222958891
+6,Yangtze,Huang He,Existing,11,1.88,2.866914,0.123174286
+6,Yangtze,Huang He,Existing,12,1.88,1.479757,0.063576379
+7,Yangtze,Ziya He interior,Existing,1,0.93,46.046056,0.035123954
+7,Yangtze,Ziya He interior,Existing,2,0.93,48.407726,0.036925437
+7,Yangtze,Ziya He interior,Existing,3,0.93,74.086165,0.056512963
+7,Yangtze,Ziya He interior,Existing,4,0.93,97.072668,0.074047079
+7,Yangtze,Ziya He interior,Existing,5,0.93,132.570034,0.101124488
+7,Yangtze,Ziya He interior,Existing,6,0.93,174.728938,0.13328332
+7,Yangtze,Ziya He interior,Existing,7,0.93,181.399557,0.138371672
+7,Yangtze,Ziya He interior,Existing,8,0.93,142.884207,0.108992144
+7,Yangtze,Ziya He interior,Existing,9,0.93,114.418885,0.087278782
+7,Yangtze,Ziya He interior,Existing,10,0.93,89.810121,0.068507205
+7,Yangtze,Ziya He interior,Existing,11,0.93,68.031734,0.05189464
+7,Yangtze,Ziya He interior,Existing,12,0.93,49.735567,0.037938315
+8,Yangtze,Huang He,Existing,1,0.93,46.046056,0.035123954
+8,Yangtze,Huang He,Existing,2,0.93,48.407726,0.036925437
+8,Yangtze,Huang He,Existing,3,0.93,74.086165,0.056512963
+8,Yangtze,Huang He,Existing,4,0.93,97.072668,0.074047079
+8,Yangtze,Huang He,Existing,5,0.93,132.570034,0.101124488
+8,Yangtze,Huang He,Existing,6,0.93,174.728938,0.13328332
+8,Yangtze,Huang He,Existing,7,0.93,181.399557,0.138371672
+8,Yangtze,Huang He,Existing,8,0.93,142.884207,0.108992144
+8,Yangtze,Huang He,Existing,9,0.93,114.418885,0.087278782
+8,Yangtze,Huang He,Existing,10,0.93,89.810121,0.068507205
+8,Yangtze,Huang He,Existing,11,0.93,68.031734,0.05189464
+8,Yangtze,Huang He,Existing,12,0.93,49.735567,0.037938315
+9,Ob,Gobi Interior,Existing,1,0.84,0.036758,0.014307973
+9,Ob,Gobi Interior,Existing,2,0.84,0.029767,0.011586741
+9,Ob,Gobi Interior,Existing,3,0.84,0.150135,0.058439728
+9,Ob,Gobi Interior,Existing,4,0.84,0.444828,0.173148348
+9,Ob,Gobi Interior,Existing,5,0.84,0.366912,0.142819712
+9,Ob,Gobi Interior,Existing,6,0.84,0.306692,0.119379205
+9,Ob,Gobi Interior,Existing,7,0.84,0.274285,0.10676485
+9,Ob,Gobi Interior,Existing,8,0.84,0.192845,0.075064504
+9,Ob,Gobi Interior,Existing,9,0.84,0.146453,0.057006517
+9,Ob,Gobi Interior,Existing,10,0.84,0.103806,0.040406264
+9,Ob,Gobi Interior,Existing,11,0.84,0.061086,0.023777595
+9,Ob,Gobi Interior,Existing,12,0.84,0.044441,0.017298564
+10,Huang He,Yangtze,Existing,1,0.75,4.834713,0.029907119
+10,Huang He,Yangtze,Existing,2,0.75,4.373283,0.027052753
+10,Huang He,Yangtze,Existing,3,0.75,5.559875,0.034392909
+10,Huang He,Yangtze,Existing,4,0.75,6.820114,0.04218864
+10,Huang He,Yangtze,Existing,5,0.75,10.380193,0.064210983
+10,Huang He,Yangtze,Existing,6,0.75,13.120795,0.081164111
+10,Huang He,Yangtze,Existing,7,0.75,17.934271,0.11093986
+10,Huang He,Yangtze,Existing,8,0.75,16.778697,0.103791579
+10,Huang He,Yangtze,Existing,9,0.75,15.996471,0.098952796
+10,Huang He,Yangtze,Existing,10,0.75,12.492241,0.07727593
+10,Huang He,Yangtze,Existing,11,0.75,7.348766,0.045458835
+10,Huang He,Yangtze,Existing,12,0.75,5.603777,0.034664483
+11,Yangtze,Huang He,Planned,1,17.4,2.20991,0.462515631
+11,Yangtze,Huang He,Planned,2,17.4,1.659475,0.347314202
+11,Yangtze,Huang He,Planned,3,17.4,2.033387,0.425570848
+11,Yangtze,Huang He,Planned,4,17.4,2.841074,0.594612964
+11,Yangtze,Huang He,Planned,5,17.4,5.931844,1.241485206
+11,Yangtze,Huang He,Planned,6,17.4,12.956837,2.711757332
+11,Yangtze,Huang He,Planned,7,17.4,15.544164,3.253263176
+11,Yangtze,Huang He,Planned,8,17.4,12.678243,2.653449944
+11,Yangtze,Huang He,Planned,9,17.4,12.092584,2.530876426
+11,Yangtze,Huang He,Planned,10,17.4,7.682734,1.607931801
+11,Yangtze,Huang He,Planned,11,17.4,4.434016,0.928002366
+11,Yangtze,Huang He,Planned,12,17.4,3.07332,0.643220104
+12,Ganges Bramaputra,Huang He,Planned,1,25,1.294505,0.857625405
+12,Ganges Bramaputra,Huang He,Planned,2,25,1.000401,0.662777905
+12,Ganges Bramaputra,Huang He,Planned,3,25,1.165878,0.772408443
+12,Ganges Bramaputra,Huang He,Planned,4,25,1.340811,0.888303696
+12,Ganges Bramaputra,Huang He,Planned,5,25,1.979165,1.311221033
+12,Ganges Bramaputra,Huang He,Planned,6,25,3.884274,2.57337906
+12,Ganges Bramaputra,Huang He,Planned,7,25,6.867996,4.5501314
+12,Ganges Bramaputra,Huang He,Planned,8,25,7.839109,5.193505647
+12,Ganges Bramaputra,Huang He,Planned,9,25,5.672417,3.758045681
+12,Ganges Bramaputra,Huang He,Planned,10,25,3.048551,2.019702345
+12,Ganges Bramaputra,Huang He,Planned,11,25,2.028447,1.343870961
+12,Ganges Bramaputra,Huang He,Planned,12,25,1.613598,1.069028422
+13,Yangtze,Huang He,Planned,1,20,14.032818,0.541636998
+13,Yangtze,Huang He,Planned,2,20,11.911546,0.4597604
+13,Yangtze,Huang He,Planned,3,20,16.298599,0.629091336
+13,Yangtze,Huang He,Planned,4,20,26.067765,1.006160414
+13,Yangtze,Huang He,Planned,5,20,45.95863,1.773905596
+13,Yangtze,Huang He,Planned,6,20,69.623051,2.687302031
+13,Yangtze,Huang He,Planned,7,20,91.468594,3.530493636
+13,Yangtze,Huang He,Planned,8,20,78.361189,3.024575616
+13,Yangtze,Huang He,Planned,9,20,67.991582,2.62433079
+13,Yangtze,Huang He,Planned,10,20,48.983322,1.890652289
+13,Yangtze,Huang He,Planned,11,20,29.091007,1.12285114
+13,Yangtze,Huang He,Planned,12,20,18.375097,0.709239753

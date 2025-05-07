@@ -7,27 +7,30 @@ from message_ix_models.util import (
     broadcast
 )
 
-basin2BCU = {
-    "Huang He": "62|CHN",
-    "Yangtze": "159|CHN",
-    "Ziya He Interior": "162|CHN",
-    "China Coast": "35|CHN",
-    "Ob": "105|CHN",
-    "Gobi Interior": "54|CHN",
-    "Ganges Bramaputra": "53|CHN"
-}
-basin2BCU = {key: 'B'+value for key, value in basin2BCU.items()}
+# # convert basin name to BCU name(R12)
+# basin2BCU = {
+#     "Huang He": "62|CHN",
+#     "Yangtze": "159|CHN",
+#     "Ziya He Interior": "162|CHN",
+#     "China Coast": "35|CHN",
+#     "Ob": "105|CHN",
+#     "Gobi Interior": "54|CHN",
+#     "Ganges Bramaputra": "53|CHN"
+# }
+# basin2BCU = {key: 'B'+value for key, value in basin2BCU.items()}
 
-FILE = "IBWT_yr.csv"
+# read monthly and yearly data in one .csv file
+FILE = "IBWT.csv"
 PATH = package_data_path("geidco25", FILE)
-df = pd.read_csv(PATH)
-# presettings for node(e.g.B11|CHN) and region(e.g.R11_CHN)
-df['node_in'] = [basin2BCU[value] for value in list(df.source)]
-df['node_out'] = [basin2BCU[value] for value in list(df.recipient)]
-df['routes'] = df["node_in"] + '_' + df["node_out"]
-df['region'] = 'R11_CHN'
-df_exist = df[df.status == "Existing"]
-df_plan = df[df.status == "Planned"]
+df = pd.read_csv(PATH, index_col=0)
+
+# presettings for node(e.g.B35|CHN) and region(e.g.R11_CHN)
+df['node_in'] = 'B'+df.basin_origin_id
+df['node_out'] = 'B'+df.basin_dest_id
+# routes for technology name
+# format: B159|CHN_B35|CHN_1
+df['routes'] = df.node_in + '_' + df.node_out + '_' + df.id.astype(str)
+df['region'] = 'R11_'+df.MSG_reg
 
 
 def inter_basin_water_transfer_exist() -> dict[str, pd.DataFrame]:
@@ -47,6 +50,10 @@ def inter_basin_water_transfer_exist() -> dict[str, pd.DataFrame]:
         Years in the data include [2010,2015,2020,2030,2040,2050]
     """
 
+    # filter existing water transfer routes
+    df_exist = df[df.status == "Existing"]
+    df_exist_yr = df_exist[df_exist.time == "year"]
+
     # presenttings for vintage and year_all
     year_all = [2010, 2015, 2020, 2030, 2040, 2050]
     first_year = 2020
@@ -59,12 +66,12 @@ def inter_basin_water_transfer_exist() -> dict[str, pd.DataFrame]:
     output_df = pd.DataFrame()
     cap_factor_df = pd.DataFrame()
     hist_new_cap_df = pd.DataFrame()
-    for index, row in df_exist.iterrows():
+    for index, row in df_exist_yr.iterrows():
         input_df = pd.concat(
             [input_df,
              make_df(
                  "input",
-                 technology="wtrs_"+row['routes'],
+                 technology="wtrs_"+row.routes,
                  value=1,
                  unit="km3",
                  level="water_avail_basin",
@@ -72,8 +79,8 @@ def inter_basin_water_transfer_exist() -> dict[str, pd.DataFrame]:
                  mode="M1",
                  time="year",
                  time_origin="year",
-                 node_loc=row['node_in'],
-                 node_origin=row['node_in']
+                 node_loc=row.node_in,
+                 node_origin=row.node_in
              ).pipe(
                  broadcast, yv_ya_sw
              )]
@@ -82,16 +89,16 @@ def inter_basin_water_transfer_exist() -> dict[str, pd.DataFrame]:
             [input_df,
              make_df(
                  "input",
-                 technology="wtrs_"+row['routes'],
-                 value=row['energy_con']/row['vol_yr'],
+                 technology="wtrs_"+row.routes,
+                 value=row.energy_con_GWh_km3,
                  unit="GWh/km3",
                  level="final",
                  commodity="electr",
                  mode="M1",
                  time="year",
                  time_origin="year",
-                 node_loc=row['node_in'],
-                 node_origin=row['region']
+                 node_loc=row.node_in,
+                 node_origin=row.region
              ).pipe(
                  broadcast, yv_ya_sw
              )]
@@ -101,7 +108,7 @@ def inter_basin_water_transfer_exist() -> dict[str, pd.DataFrame]:
             [output_df,
              make_df(
                  "output",
-                 technology="wtrs_"+row['routes'],
+                 technology="wtrs_"+row.routes,
                  value=1,
                  unit="km3",
                  level="water_avail_basin",
@@ -109,8 +116,8 @@ def inter_basin_water_transfer_exist() -> dict[str, pd.DataFrame]:
                  mode="M1",
                  time="year",
                  time_dest="year",
-                 node_loc=row['node_in'],
-                 node_dest=row['node_out']
+                 node_loc=row.node_in,
+                 node_dest=row.node_out
              ).pipe(
                  broadcast, yv_ya_sw
              )]
@@ -120,8 +127,8 @@ def inter_basin_water_transfer_exist() -> dict[str, pd.DataFrame]:
             [cap_factor_df,
              make_df(
                  "capacity_factor",
-                 node_loc=row['node_in'],
-                 technology="wtrs_"+row['routes'],
+                 node_loc=row.node_in,
+                 technology="wtrs_"+row.routes,
                  time="year",
                  value=0.8  # according to (Sun,2021,Water Research)
              ).pipe(
@@ -133,9 +140,9 @@ def inter_basin_water_transfer_exist() -> dict[str, pd.DataFrame]:
             [hist_new_cap_df,
              make_df(
                  "historical_new_capacity",
-                 node_loc=row['node_in'],
-                 technology="wtrs_"+row['routes'],
-                 value=row['vol_yr'],
+                 node_loc=row.node_in,
+                 technology="wtrs_"+row.routes,
+                 value=row.vol_yr_km3,
                  unit="km3/year",
                  year_vtg=2015,
              )]
@@ -153,3 +160,8 @@ def inter_basin_water_transfer_plan() -> dict[str, pd.DataFrame]:
     result = {}
 
     return result
+
+
+result = inter_basin_water_transfer_exist()
+input_test = result['input']
+output_test = result['output']

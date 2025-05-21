@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import ixmp
 import message_ix
@@ -19,7 +20,13 @@ model_tar = "clone_SSP_SSP5_v4.0_test"
 scen_tar = "baseline_clone_testing"
 tar_scen = sour_scen.clone(model=model_tar, scenario=scen_tar,
                            keep_solution=False)
-tar_scen.check_out()
+
+# Check water technology in the scenario
+if "surfacewater_basin" in list(tar_scen.set("commodity")):
+    pass
+else:
+    print("No water technology in the scenario.")
+    sys.exit()
 
 # read data from IBWT functions
 data_exist = inter_basin_water_transfer_exist(tar_scen)
@@ -43,7 +50,6 @@ with tar_scen.transact("Add water transfer technology"):
     for par in par_plan:
         tar_scen.add_par(par, data_plan[par])
 
-tar_scen.commit(comment="define parameters for inter-basin water transfer")
 tar_scen.set_as_default()
 tar_scen.solve()
 

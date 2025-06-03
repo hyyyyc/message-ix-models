@@ -95,7 +95,7 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
              make_df(
                  "input",
                  technology="wtrs_"+row.routes,
-                 value=row.energy_con_GWh_km3,
+                 value=row.energy_con_MWh_MCM,
                  unit="MWh/MCM",
                  level="final",
                  commodity="electr",
@@ -269,7 +269,7 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
              make_df(
                  "input",
                  technology="wtrs_"+row.routes,
-                 value=row.energy_con_GWh_km3,
+                 value=row.energy_con_MWh_MCM,
                  unit="MWh/MCM",
                  level="final",
                  commodity="electr",

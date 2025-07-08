@@ -71,6 +71,7 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
     hist_new_cap_df = pd.DataFrame()
     var_cost_df = pd.DataFrame()
     fix_cost_df = pd.DataFrame()
+    bound_total_cap_lo_df = pd.DataFrame()
     for index, row in df_exist_yr.iterrows():
         input_df = pd.concat(
             [input_df,
@@ -95,8 +96,8 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
              make_df(
                  "input",
                  technology="wtrs_"+row.routes,
-                 value=row.energy_con_MWh_MCM,
-                 unit="MWh/MCM",
+                 value=row.energy_con_GWh_MCM,
+                 unit="GWh/MCM",
                  level="final",
                  commodity="electr",
                  mode="M1",
@@ -195,6 +196,21 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
              )]
         )
 
+        bound_total_cap_lo_df = pd.concat(
+            [bound_total_cap_lo_df,
+             make_df(
+                 "bound_total_capacity_lo",
+                 node_loc=row.node_in,
+                 technology="wtrs_"+row.routes,
+                 value=row.vol_yr_MCM,
+                 unit="MCM/year"
+             ).pipe(
+                 broadcast, year_act=year_all
+             )]
+        )
+        # Bound should start from after 2015
+        bound_total_cap_lo_df = bound_total_cap_lo_df[bound_total_cap_lo_df["year_act"] > 2015]
+
     result['input'] = input_df
     result['output'] = output_df
     result['capacity_factor'] = cap_factor_df
@@ -202,6 +218,7 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
     result['historical_new_capacity'] = hist_new_cap_df
     result['fix_cost'] = fix_cost_df
     result['var_cost'] = var_cost_df
+    result['bound_total_capacity_lo'] = bound_total_cap_lo_df
 
     return result
 
@@ -244,7 +261,7 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
     inv_cost_df = pd.DataFrame()
     var_cost_df = pd.DataFrame()
     fix_cost_df = pd.DataFrame()
-    bound_total_cap_df = pd.DataFrame()
+    bound_total_cap_up_df = pd.DataFrame()
     for index, row in df_exist_yr.iterrows():
         input_df = pd.concat(
             [input_df,
@@ -269,8 +286,8 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
              make_df(
                  "input",
                  technology="wtrs_"+row.routes,
-                 value=row.energy_con_MWh_MCM,
-                 unit="MWh/MCM",
+                 value=row.energy_con_GWh_MCM,
+                 unit="GWh/MCM",
                  level="final",
                  commodity="electr",
                  mode="M1",
@@ -370,8 +387,8 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
              )]
         )
 
-        bound_total_cap_df = pd.concat(
-            [bound_total_cap_df,
+        bound_total_cap_up_df = pd.concat(
+            [bound_total_cap_up_df,
              make_df(
                  "bound_total_capacity_up",
                  node_loc=row.node_in,
@@ -383,7 +400,7 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
              )]
         )
         # Bound should start from 2030
-        bound_total_cap_df = bound_total_cap_df[bound_total_cap_df["year_act"] > 2025]
+        bound_total_cap_up_df = bound_total_cap_up_df[bound_total_cap_up_df["year_act"] > 2025]
 
     result['input'] = input_df
     result['output'] = output_df
@@ -392,6 +409,6 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
     result['inv_cost'] = inv_cost_df
     result['fix_cost'] = fix_cost_df
     result['var_cost'] = var_cost_df
-    result['bound_total_capacity_up'] = bound_total_cap_df
+    result['bound_total_capacity_up'] = bound_total_cap_up_df
 
     return result

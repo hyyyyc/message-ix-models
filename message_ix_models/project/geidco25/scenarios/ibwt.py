@@ -16,8 +16,8 @@ scen_sour = "baseline_geidco_test_nexus_3_july"
 sour_scen = message_ix.Scenario(mp, model=model_sour, scenario=scen_sour)
 
 # Target scenario
-model_tar = "clone_geidco_test_ibwt_t1"
-scen_tar = "baseline_geidco_test_nexus_3_july_ibwt_t1"
+model_tar = "clone_geidco_test_ibwt_t2"
+scen_tar = "baseline_geidco_test_nexus_3_july_ibwt_t2"
 tar_scen = sour_scen.clone(model=model_tar, scenario=scen_tar,
                            keep_solution=False)
 

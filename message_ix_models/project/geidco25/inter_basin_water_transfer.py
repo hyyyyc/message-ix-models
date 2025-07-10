@@ -72,12 +72,13 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
     var_cost_df = pd.DataFrame()
     fix_cost_df = pd.DataFrame()
     bound_total_cap_lo_df = pd.DataFrame()
+    bound_total_cap_up_df = pd.DataFrame()
     for index, row in df_exist_yr.iterrows():
         input_df = pd.concat(
             [input_df,
              make_df(
                  "input",
-                 technology="wtrs_"+row.routes,
+                 technology="ibwt_"+row.routes,
                  value=1,
                  unit="MCM",
                  level="water_avail_basin",
@@ -95,9 +96,9 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
             [input_df,
              make_df(
                  "input",
-                 technology="wtrs_"+row.routes,
-                 value=row.energy_con_GWh_MCM,
-                 unit="GWh/MCM",
+                 technology="ibwt_"+row.routes,
+                 value=row.energy_con_GWa_MCM,
+                 unit="GWa/MCM",
                  level="final",
                  commodity="electr",
                  mode="M1",
@@ -114,7 +115,7 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
             [output_df,
              make_df(
                  "output",
-                 technology="wtrs_"+row.routes,
+                 technology="ibwt_"+row.routes,
                  value=1,
                  unit="MCM",
                  level="water_avail_basin",
@@ -134,7 +135,7 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
              make_df(
                  "capacity_factor",
                  node_loc=row.node_in,
-                 technology="wtrs_"+row.routes,
+                 technology="ibwt_"+row.routes,
                  time="year",
                  value=0.8,  # according to (Sun,2021,Water Research)
                  unit="%"
@@ -148,7 +149,7 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
              make_df(
                  "technical_lifetime",
                  node_loc=row.node_in,
-                 technology="wtrs_"+row.routes,
+                 technology="ibwt_"+row.routes,
                  value=70,
                  unit="y"
              ).pipe(
@@ -161,10 +162,10 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
              make_df(
                  "historical_new_capacity",
                  node_loc=row.node_in,
-                 technology="wtrs_"+row.routes,
+                 technology="ibwt_"+row.routes,
                  value=row.vol_yr_MCM,
                  unit="MCM/year",
-                 year_vtg=2015,
+                 year_vtg=first_year,
              )]
         )
 
@@ -173,7 +174,7 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
              make_df(
                  "fix_cost",
                  node_loc=row.node_in,
-                 technology="wtrs_"+row.routes,
+                 technology="ibwt_"+row.routes,
                  value=row.fixed_cost_USD_MCM,
                  unit="USD/MCM"
              ).pipe(
@@ -186,7 +187,7 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
              make_df(
                  "var_cost",
                  node_loc=row.node_in,
-                 technology="wtrs_"+row.routes,
+                 technology="ibwt_"+row.routes,
                  value=row.var_cost_USD_MCM,
                  unit="USD/MCM",
                  mode="M1",
@@ -201,15 +202,30 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
              make_df(
                  "bound_total_capacity_lo",
                  node_loc=row.node_in,
-                 technology="wtrs_"+row.routes,
+                 technology="ibwt_"+row.routes,
+                 value=0.95*row.vol_yr_MCM,
+                 unit="MCM/year"
+             ).pipe(
+                 broadcast, year_act=year_all
+             )]
+        )
+        # Bound should start from after firstmodelyear
+        bound_total_cap_lo_df = bound_total_cap_lo_df[bound_total_cap_lo_df["year_act"] > first_year]
+
+        bound_total_cap_up_df = pd.concat(
+            [bound_total_cap_up_df,
+             make_df(
+                 "bound_total_capacity_up",
+                 node_loc=row.node_in,
+                 technology="ibwt_"+row.routes,
                  value=row.vol_yr_MCM,
                  unit="MCM/year"
              ).pipe(
                  broadcast, year_act=year_all
              )]
         )
-        # Bound should start from after 2015
-        bound_total_cap_lo_df = bound_total_cap_lo_df[bound_total_cap_lo_df["year_act"] > 2015]
+        # Bound should start from after firstmodelyear
+        bound_total_cap_up_df = bound_total_cap_up_df[bound_total_cap_up_df["year_act"] > first_year]
 
     result['input'] = input_df
     result['output'] = output_df
@@ -219,6 +235,7 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
     result['fix_cost'] = fix_cost_df
     result['var_cost'] = var_cost_df
     result['bound_total_capacity_lo'] = bound_total_cap_lo_df
+    result['bound_total_capacity_up'] = bound_total_cap_up_df
 
     return result
 
@@ -267,7 +284,7 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
             [input_df,
              make_df(
                  "input",
-                 technology="wtrs_"+row.routes,
+                 technology="ibwt_"+row.routes,
                  value=1,
                  unit="MCM",
                  level="water_avail_basin",
@@ -285,9 +302,9 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
             [input_df,
              make_df(
                  "input",
-                 technology="wtrs_"+row.routes,
-                 value=row.energy_con_GWh_MCM,
-                 unit="GWh/MCM",
+                 technology="ibwt_"+row.routes,
+                 value=row.energy_con_GWa_MCM,
+                 unit="GWa/MCM",
                  level="final",
                  commodity="electr",
                  mode="M1",
@@ -304,7 +321,7 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
             [output_df,
              make_df(
                  "output",
-                 technology="wtrs_"+row.routes,
+                 technology="ibwt_"+row.routes,
                  value=1,
                  unit="MCM",
                  level="water_avail_basin",
@@ -324,7 +341,7 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
              make_df(
                  "capacity_factor",
                  node_loc=row.node_in,
-                 technology="wtrs_"+row.routes,
+                 technology="ibwt_"+row.routes,
                  time="year",
                  value=0.8,  # according to (Sun,2021,Water Research)
                  unit="%"
@@ -338,7 +355,7 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
              make_df(
                  "technical_lifetime",
                  node_loc=row.node_in,
-                 technology="wtrs_"+row.routes,
+                 technology="ibwt_"+row.routes,
                  value=70,
                  unit="y"
              ).pipe(
@@ -351,7 +368,7 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
              make_df(
                  "inv_cost",
                  node_loc=row.node_in,
-                 technology="wtrs_"+row.routes,
+                 technology="ibwt_"+row.routes,
                  value=row.inv_cost_USD_MCM,
                  unit="USD/MCM"
              ).pipe(
@@ -364,7 +381,7 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
              make_df(
                  "fix_cost",
                  node_loc=row.node_in,
-                 technology="wtrs_"+row.routes,
+                 technology="ibwt_"+row.routes,
                  value=row.fixed_cost_USD_MCM,
                  unit="USD/MCM"
              ).pipe(
@@ -377,7 +394,7 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
              make_df(
                  "var_cost",
                  node_loc=row.node_in,
-                 technology="wtrs_"+row.routes,
+                 technology="ibwt_"+row.routes,
                  value=row.var_cost_USD_MCM,
                  unit="USD/MCM",
                  mode="M1",
@@ -392,7 +409,7 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
              make_df(
                  "bound_total_capacity_up",
                  node_loc=row.node_in,
-                 technology="wtrs_"+row.routes,
+                 technology="ibwt_"+row.routes,
                  value=row.vol_yr_MCM,
                  unit="MCM/year"
              ).pipe(

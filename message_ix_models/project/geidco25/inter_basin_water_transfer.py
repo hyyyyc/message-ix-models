@@ -24,12 +24,13 @@ FILE = "IBWT.csv"
 PATH = package_data_path("geidco25", FILE)
 df = pd.read_csv(PATH, index_col=0)
 
-# presettings for node(e.g.B35CHN) and region(e.g.R12_CHN)
+# presettings for node(e.g.B35|CHN) and region(e.g.R12_CHN)
 df['node_in'] = 'B'+df.basin_origin_id
 df['node_out'] = 'B'+df.basin_dest_id
 # routes for technology name
 # format: B159CHN_B35CHN_1
-df['routes'] = df.node_in + '_' + df.node_out + '_' + df.id.astype(str)
+df['routes'] = (df.node_in + '_' + df.node_out + '_' +
+                df.id.astype(str)).str.replace('|', '', regex=False)
 df['region'] = 'R12_'+df.MSG_reg
 
 

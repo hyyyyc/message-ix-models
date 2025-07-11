@@ -56,6 +56,7 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
 
     # presenttings for vintage and year_all
     year_all = sc.set('year').tolist()
+    # in the future (e.g. 2030), not including history
     first_year = sc.firstmodelyear
     # retrieve historic time-steps
     history = [y for y in year_all if y < first_year]
@@ -165,7 +166,7 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
                  technology="ibwt_"+row.routes,
                  value=row.vol_yr_MCM,
                  unit="MCM/year",
-                 year_vtg=first_year,
+                 year_vtg=2025,
              )]
         )
 
@@ -209,8 +210,8 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
                  broadcast, year_act=year_all
              )]
         )
-        # Bound should start from after firstmodelyear
-        bound_total_cap_lo_df = bound_total_cap_lo_df[bound_total_cap_lo_df["year_act"] > first_year]
+        # Bound should start from after 2025
+        bound_total_cap_lo_df = bound_total_cap_lo_df[bound_total_cap_lo_df["year_act"] > 2025]
 
         bound_total_cap_up_df = pd.concat(
             [bound_total_cap_up_df,
@@ -224,8 +225,8 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
                  broadcast, year_act=year_all
              )]
         )
-        # Bound should start from after firstmodelyear
-        bound_total_cap_up_df = bound_total_cap_up_df[bound_total_cap_up_df["year_act"] > first_year]
+        # Bound should start from after 2025
+        bound_total_cap_up_df = bound_total_cap_up_df[bound_total_cap_up_df["year_act"] > 2025]
 
     result['input'] = input_df
     result['output'] = output_df
@@ -263,6 +264,7 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
 
     # presenttings for vintage and year_all
     year_all = sc.set('year').tolist()
+    # in the future (e.g. 2030), not including history
     first_year = sc.firstmodelyear
     # retrieve historic time-steps
     history = [y for y in year_all if y < first_year]

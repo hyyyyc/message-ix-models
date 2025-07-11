@@ -17,7 +17,7 @@ sour_scen = message_ix.Scenario(mp, model=model_sour, scenario=scen_sour)
 
 # Target scenario
 model_tar = "clone_geidco_test_ibwt_t2"
-scen_tar = "baseline_geidco_test_nexus_3_july_ibwt_t2"
+scen_tar = "baseline_geidco_test_nexus_3_july_ibwt_t2_3"
 tar_scen = sour_scen.clone(model=model_tar, scenario=scen_tar,
                            keep_solution=False)
 
@@ -51,6 +51,6 @@ with tar_scen.transact("Add water transfer technology"):
         tar_scen.add_par(par, data_plan[par])
 
 tar_scen.set_as_default()
-tar_scen.solve()
+tar_scen.solve(solve_options={"lpmethod": "4", "scaind": "-1"})
 
 mp.close_db()

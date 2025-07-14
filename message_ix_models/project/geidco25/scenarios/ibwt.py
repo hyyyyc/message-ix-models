@@ -47,8 +47,13 @@ def change_ibwt_name(scen: message_ix.Scenario) -> None:
     # old tech name under this scenario
     all_tech = scen.set("technology")
     old_name = all_tech[all_tech.str.startswith('ibwt')].tolist()
+    # new tech name
+    new_name = [s.replace('|', '') for s in old_name]
 
     with scen.transact("Rename ibwt technology"):
+        scen.remove_set("technology", old_name)
+        scen.add_set("technology", new_name)
+
         for param in tech_parameters:
             try:
                 # Get data for old technology
@@ -63,10 +68,12 @@ def change_ibwt_name(scen: message_ix.Scenario) -> None:
                     # Remove old data
                     scen.remove_par(param, old_data)
                     # Add new data
+                    # Warning: Pars are not added, don't know why
                     scen.add_par(param, new_data)
 
             except Exception as e:
-                # Parameter doesn't exist or no data - skip silently
+                # skip
+                print("Parameter doesn't exist or no data")
                 continue
 
 
@@ -74,13 +81,13 @@ def change_ibwt_name(scen: message_ix.Scenario) -> None:
 mp = ixmp.Platform(name="ixmp_dev", jvmargs=["-Xmx14G"])
 
 # Source scenario based on existing model in the db
-model_sour = "clone_geidco_test_ibwt_t2_1"
-scen_sour = "baseline_geidco_test_nexus_3_july_ibwt_t2_1"
+model_sour = "MESSAGE_GLOBIOM_SSP2_v6.1"
+scen_sour = "baseline_nexus_7_high"
 sour_scen = message_ix.Scenario(mp, model=model_sour, scenario=scen_sour)
 
 # Target scenario
-model_tar = "clone_geidco_test_ibwt_t2_2"
-scen_tar = "baseline_geidco_test_nexus_3_july_ibwt_t2_2"
+model_tar = "MESSAGE_GLOBIOM_SSP2_v6.1_ibwt_t3"
+scen_tar = "baseline_nexus_7_high_ibwt_t3"
 tar_scen = sour_scen.clone(model=model_tar, scenario=scen_tar,
                            keep_solution=False)
 
@@ -91,7 +98,7 @@ else:
     print("No water technology in the scenario.")
     sys.exit()
 
-change_ibwt_name(tar_scen)
+add_ibwt(tar_scen)
 
 tar_scen.set_as_default()
 tar_scen.solve(solve_options={"lpmethod": "4", "scaind": "-1"})

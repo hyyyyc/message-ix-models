@@ -29,6 +29,7 @@ df['node_in'] = 'B'+df.basin_origin_id
 df['node_out'] = 'B'+df.basin_dest_id
 # routes for technology name
 # format: B159CHN_B35CHN_1
+# remove "|" from nodes
 df['routes'] = (df.node_in + '_' + df.node_out + '_' +
                 df.id.astype(str)).str.replace('|', '', regex=False)
 df['region'] = 'R12_'+df.MSG_reg
@@ -177,8 +178,8 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
                  "fix_cost",
                  node_loc=row.node_in,
                  technology="ibwt_"+row.routes,
-                 value=row.fixed_cost_USD_MCM,
-                 unit="USD/MCM"
+                 value=(row.fixed_cost_USD_MCM)/1e6,
+                 unit="MUSD/MCM"
              ).pipe(
                  broadcast, yv_ya_sw
              )]
@@ -190,8 +191,8 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
                  "var_cost",
                  node_loc=row.node_in,
                  technology="ibwt_"+row.routes,
-                 value=row.var_cost_USD_MCM,
-                 unit="USD/MCM",
+                 value=(row.var_cost_USD_MCM)/1e6,
+                 unit="MUSD/MCM",
                  mode="M1",
                  time="year"
              ).pipe(
@@ -372,8 +373,8 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
                  "inv_cost",
                  node_loc=row.node_in,
                  technology="ibwt_"+row.routes,
-                 value=row.inv_cost_USD_MCM,
-                 unit="USD/MCM"
+                 value=(row.inv_cost_USD_MCM)/1e6,
+                 unit="MUSD/MCM"
              ).pipe(
                  broadcast, year_vtg=year_all
              )]
@@ -385,8 +386,8 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
                  "fix_cost",
                  node_loc=row.node_in,
                  technology="ibwt_"+row.routes,
-                 value=row.fixed_cost_USD_MCM,
-                 unit="USD/MCM"
+                 value=(row.fixed_cost_USD_MCM)/1e6,
+                 unit="MUSD/MCM"
              ).pipe(
                  broadcast, yv_ya_sw
              )]
@@ -398,8 +399,8 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
                  "var_cost",
                  node_loc=row.node_in,
                  technology="ibwt_"+row.routes,
-                 value=row.var_cost_USD_MCM,
-                 unit="USD/MCM",
+                 value=(row.var_cost_USD_MCM)/1e6,
+                 unit="MUSD/MCM",
                  mode="M1",
                  time="year"
              ).pipe(

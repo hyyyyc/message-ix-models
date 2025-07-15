@@ -77,6 +77,19 @@ def change_ibwt_name(scen: message_ix.Scenario) -> None:
                 continue
 
 
+# def add_act_bound_exsiting(scen: message_ix.Scenario) -> None:
+#     print("Add activity boundary for existing IBWT")
+#     # Read data from IBWT functions
+#     data_exist = inter_basin_water_transfer_exist(scen)
+#     # IBWT technologies
+#     tech = data_exist['input']['technology'].unique()
+#     # Get lower boundary for existing IBWT
+#     cap_lo = scen.par("bound_total_capacity_lo", filters={"technology": tech})
+#     # Remove lower capacity boundary
+#     scen.remove_par("bound_total_capcity_lo", cap_lo)
+#     # Add activity boundary
+
+
 # Connect to a db
 mp = ixmp.Platform(name="ixmp_dev", jvmargs=["-Xmx14G"])
 
@@ -86,8 +99,8 @@ scen_sour = "baseline_nexus_7_high"
 sour_scen = message_ix.Scenario(mp, model=model_sour, scenario=scen_sour)
 
 # Target scenario
-model_tar = "MESSAGE_GLOBIOM_SSP2_v6.1_ibwt_t3"
-scen_tar = "baseline_nexus_7_high_ibwt_t3"
+model_tar = "MESSAGE_GLOBIOM_SSP2_v6.1_ibwt_t3.1"
+scen_tar = "baseline_nexus_7_high_ibwt_t3.1"
 tar_scen = sour_scen.clone(model=model_tar, scenario=scen_tar,
                            keep_solution=False)
 

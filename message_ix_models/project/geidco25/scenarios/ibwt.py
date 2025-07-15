@@ -1,10 +1,15 @@
 import sys
 import numpy as np
+import pandas as pd
 import ixmp
 import message_ix
+from message_ix_models.util import (
+    broadcast
+)
 from message_ix_models.project.geidco25.inter_basin_water_transfer import (
     inter_basin_water_transfer_exist,
-    inter_basin_water_transfer_plan
+    inter_basin_water_transfer_plan,
+    ibwt_data_preprocess
 )
 
 
@@ -77,25 +82,71 @@ def change_ibwt_name(scen: message_ix.Scenario) -> None:
                 continue
 
 
-# def add_act_bound_exsiting(scen: message_ix.Scenario) -> None:
-#     print("Add activity boundary for existing IBWT")
-#     # Read data from IBWT functions
-#     data_exist = inter_basin_water_transfer_exist(scen)
-#     # IBWT technologies
-#     tech = data_exist['input']['technology'].unique()
-#     # Get lower boundary for existing IBWT
-#     cap_lo = scen.par("bound_total_capacity_lo", filters={"technology": tech})
-#     # Remove lower capacity boundary
-#     scen.remove_par("bound_total_capcity_lo", cap_lo)
-#     # Add activity boundary
+def add_act_bound_exsiting(scen: message_ix.Scenario) -> None:
+    print("Remove lower capacity boundary for existing IBWT")
+    # Read data from IBWT functions
+    data_exist = inter_basin_water_transfer_exist(scen)
+    # IBWT technologies
+    tech = data_exist['input']['technology'].unique()
+    # Get lower boundary for existing IBWT
+    cap_lo = scen.par("bound_total_capacity_lo", filters={"technology": tech})
+    # Remove lower capacity boundary
+    scen.remove_par("bound_total_capcity_lo", cap_lo)
+
+    print("Add activity boundary for existing IBWT")
+    df = ibwt_data_preprocess()
+    # Filter existing water transfer routes
+    df_exist = df[df.status == "Existing"]
+    df_exist_yr = df_exist[df_exist.time == "year"]
+    # Presenttings for vintage and year_all
+    year_all = scen.set('year').tolist()
+
+    bound_act_lo_df = pd.DataFrame()
+    bound_act_up_df = pd.DataFrame()
+    for index, row in df_exist_yr.iterrows():
+        bound_act_lo_df = pd.concat(
+            [bound_act_lo_df,
+             message_ix.make_df(
+                 "bound_activity_lo",
+                 node_loc=row.node_in,
+                 technology="ibwt_"+row.routes,
+                 mode="M1",
+                 time="year",
+                 value=0.95*row.vol_yr_MCM,
+                 unit="MCM/year"
+             ).pipe(
+                 broadcast, year_act=year_all
+             )]
+        )
+        bound_act_lo_df = bound_act_lo_df[bound_act_lo_df["year_act"] >= 2025]
+
+        bound_act_up_df = pd.concat(
+            [bound_act_up_df,
+             message_ix.make_df(
+                 "bound_activity_up",
+                 node_loc=row.node_in,
+                 technology="ibwt_"+row.routes,
+                 mode="M1",
+                 time="year",
+                 value=row.vol_yr_MCM,
+                 unit="MCM/year"
+             ).pipe(
+                 broadcast, year_act=year_all
+             )]
+        )
+        bound_act_up_df = bound_act_up_df[bound_act_up_df["year_act"] >= 2025]
+
+    # Add activity boundary
+    scen.add_par("bound_activity_lo", bound_act_lo_df)
+    scen.add_par("bound_activity_up", bound_act_up_df)
 
 
 # Connect to a db
 mp = ixmp.Platform(name="ixmp_dev", jvmargs=["-Xmx14G"])
 
 # Source scenario based on existing model in the db
-model_sour = "MESSAGE_GLOBIOM_SSP2_v6.1"
-scen_sour = "baseline_nexus_7_high"
+model_sour = "MESSAGE_GLOBIOM_SSP2_v6.1_ibwt_t3"
+scen_sour = "baseline_nexus_7_high_ibwt_t3"
 sour_scen = message_ix.Scenario(mp, model=model_sour, scenario=scen_sour)
 
 # Target scenario
@@ -111,7 +162,7 @@ else:
     print("No water technology in the scenario.")
     sys.exit()
 
-add_ibwt(tar_scen)
+add_act_bound_exsiting(tar_scen)
 
 tar_scen.set_as_default()
 tar_scen.solve(solve_options={"lpmethod": "4", "scaind": "-1"})

@@ -1,41 +1,35 @@
 import pandas as pd
 
-from message_ix import make_df
+from message_ix import (
+    make_df,
+    Scenario)
 from message_ix_models.model.water.utils import map_yv_ya_lt
 from message_ix_models.util import (
     package_data_path,
     broadcast
 )
 
-# # convert basin name to BCU name(R12)
-# basin2BCU = {
-#     "Huang He": "62|CHN",
-#     "Yangtze": "159|CHN",
-#     "Ziya He Interior": "162|CHN",
-#     "China Coast": "35|CHN",
-#     "Ob": "105|CHN",
-#     "Gobi Interior": "54|CHN",
-#     "Ganges Bramaputra": "53|CHN"
-# }
-# basin2BCU = {key: 'B'+value for key, value in basin2BCU.items()}
 
-# read monthly and yearly data in one .csv file
-FILE = "IBWT.csv"
-PATH = package_data_path("geidco25", FILE)
-df = pd.read_csv(PATH, index_col=0)
+def ibwt_data_preprocess() -> pd.DataFrame:
+    # read monthly and yearly data in one .csv file
+    FILE = "IBWT.csv"
+    PATH = package_data_path("geidco25", FILE)
+    df = pd.read_csv(PATH, index_col=0)
 
-# presettings for node(e.g.B35|CHN) and region(e.g.R12_CHN)
-df['node_in'] = 'B'+df.basin_origin_id
-df['node_out'] = 'B'+df.basin_dest_id
-# routes for technology name
-# format: B159CHN_B35CHN_1
-# remove "|" from nodes
-df['routes'] = (df.node_in + '_' + df.node_out + '_' +
-                df.id.astype(str)).str.replace('|', '', regex=False)
-df['region'] = 'R12_'+df.MSG_reg
+    # presettings for node(e.g.B35|CHN) and region(e.g.R12_CHN)
+    df['node_in'] = 'B'+df.basin_origin_id
+    df['node_out'] = 'B'+df.basin_dest_id
+    # routes for technology name
+    # format: B159CHN_B35CHN_1
+    # remove "|" from nodes
+    df['routes'] = (df.node_in + '_' + df.node_out + '_' +
+                    df.id.astype(str)).str.replace('|', '', regex=False)
+    df['region'] = 'R12_'+df.MSG_reg
+
+    return df
 
 
-def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
+def inter_basin_water_transfer_exist(sc: Scenario) -> dict[str, pd.DataFrame]:
     """Add existing inter basin water transfers (IBWT)
     This function defines design volume (historical new capacity), 
     energy consumption (input), capacity factor, technical lifetime, 
@@ -52,6 +46,7 @@ def inter_basin_water_transfer_exist(sc) -> dict[str, pd.DataFrame]:
         Values are data frames ready for :meth:`~.Scenario.add_par`.
     """
 
+    df = ibwt_data_preprocess()
     # filter existing water transfer routes
     df_exist = df[df.status == "Existing"]
     df_exist_yr = df_exist[df_exist.time == "year"]
@@ -296,6 +291,7 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
         Values are data frames ready for :meth:`~.Scenario.add_par`.
     """
 
+    df = ibwt_data_preprocess()
     # filter existing water transfer routes
     df_exist = df[df.status == "Planned"]
     df_exist_yr = df_exist[df_exist.time == "year"]

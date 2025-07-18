@@ -91,7 +91,8 @@ def add_act_bound_exsiting(scen: message_ix.Scenario) -> None:
     # Get lower boundary for existing IBWT
     cap_lo = scen.par("bound_total_capacity_lo", filters={"technology": tech})
     # Remove lower capacity boundary
-    scen.remove_par("bound_total_capcity_lo", cap_lo)
+    with scen.transact("Remove lower capacity boundary for existing IBWT"):
+        scen.remove_par("bound_total_capacity_lo", cap_lo)
 
     print("Add activity boundary for existing IBWT")
     df = ibwt_data_preprocess()
@@ -109,10 +110,10 @@ def add_act_bound_exsiting(scen: message_ix.Scenario) -> None:
              message_ix.make_df(
                  "bound_activity_lo",
                  node_loc=row.node_in,
-                 technology="ibwt_"+row.routes,
+                 technology="ibwt_e_"+row.routes,
                  mode="M1",
                  time="year",
-                 value=0.95*row.vol_yr_MCM,
+                 value=0.6*row.vol_yr_MCM,
                  unit="MCM/year"
              ).pipe(
                  broadcast, year_act=year_all
@@ -125,10 +126,10 @@ def add_act_bound_exsiting(scen: message_ix.Scenario) -> None:
              message_ix.make_df(
                  "bound_activity_up",
                  node_loc=row.node_in,
-                 technology="ibwt_"+row.routes,
+                 technology="ibwt_e_"+row.routes,
                  mode="M1",
                  time="year",
-                 value=row.vol_yr_MCM,
+                 value=0.95*row.vol_yr_MCM,
                  unit="MCM/year"
              ).pipe(
                  broadcast, year_act=year_all
@@ -137,8 +138,9 @@ def add_act_bound_exsiting(scen: message_ix.Scenario) -> None:
         bound_act_up_df = bound_act_up_df[bound_act_up_df["year_act"] >= 2025]
 
     # Add activity boundary
-    scen.add_par("bound_activity_lo", bound_act_lo_df)
-    scen.add_par("bound_activity_up", bound_act_up_df)
+    with scen.transact("Add activity boundary for existing IBWT"):
+        scen.add_par("bound_activity_lo", bound_act_lo_df)
+        scen.add_par("bound_activity_up", bound_act_up_df)
 
 
 # Connect to a db
@@ -150,8 +152,8 @@ scen_sour = "baseline_nexus_7_high_ibwt_t3"
 sour_scen = message_ix.Scenario(mp, model=model_sour, scenario=scen_sour)
 
 # Target scenario
-model_tar = "MESSAGE_GLOBIOM_SSP2_v6.1_ibwt_t3.1"
-scen_tar = "baseline_nexus_7_high_ibwt_t3.1"
+model_tar = "MESSAGE_GLOBIOM_SSP2_v6.1_ibwt_t3.3"
+scen_tar = "baseline_nexus_7_high_ibwt_t3.3"
 tar_scen = sour_scen.clone(model=model_tar, scenario=scen_tar,
                            keep_solution=False)
 
@@ -162,7 +164,7 @@ else:
     print("No water technology in the scenario.")
     sys.exit()
 
-add_act_bound_exsiting(tar_scen)
+add_ibwt(tar_scen)
 
 tar_scen.set_as_default()
 tar_scen.solve(solve_options={"lpmethod": "4", "scaind": "-1"})

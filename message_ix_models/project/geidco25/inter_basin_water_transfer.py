@@ -26,6 +26,10 @@ def ibwt_data_preprocess() -> pd.DataFrame:
                     df.id.astype(str)).str.replace('|', '', regex=False)
     df['region'] = 'R12_'+df.MSG_reg
 
+    # Remove route 9 (Ob->Gobi Interior)
+    # Surfacewater in B105|CHN cannot sustain water transfer
+    df = df[df['id'] != 9]
+
     return df
 
 
@@ -197,20 +201,20 @@ def inter_basin_water_transfer_exist(sc: Scenario) -> dict[str, pd.DataFrame]:
              )]
         )
 
-        bound_total_cap_lo_df = pd.concat(
-            [bound_total_cap_lo_df,
-             make_df(
-                 "bound_total_capacity_lo",
-                 node_loc=row.node_in,
-                 technology="ibwt_e_"+row.routes,
-                 value=0.95*row.vol_yr_MCM,
-                 unit="MCM/year"
-             ).pipe(
-                 broadcast, year_act=year_all
-             )]
-        )
-        # Bound should start from after 2025
-        bound_total_cap_lo_df = bound_total_cap_lo_df[bound_total_cap_lo_df["year_act"] > 2025]
+        # bound_total_cap_lo_df = pd.concat(
+        #     [bound_total_cap_lo_df,
+        #      make_df(
+        #          "bound_total_capacity_lo",
+        #          node_loc=row.node_in,
+        #          technology="ibwt_e_"+row.routes,
+        #          value=0.95*row.vol_yr_MCM,
+        #          unit="MCM/year"
+        #      ).pipe(
+        #          broadcast, year_act=year_all
+        #      )]
+        # )
+        # # Bound should start from after 2025
+        # bound_total_cap_lo_df = bound_total_cap_lo_df[bound_total_cap_lo_df["year_act"] > 2025]
 
         bound_total_cap_up_df = pd.concat(
             [bound_total_cap_up_df,
@@ -227,37 +231,37 @@ def inter_basin_water_transfer_exist(sc: Scenario) -> dict[str, pd.DataFrame]:
         # Bound should start from after 2025
         bound_total_cap_up_df = bound_total_cap_up_df[bound_total_cap_up_df["year_act"] > 2025]
 
-        # bound_act_lo_df = pd.concat(
-        #     [bound_act_lo_df,
-        #      make_df(
-        #          "bound_activity_lo",
-        #          node_loc=row.node_in,
-        #          technology="ibwt_e_"+row.routes,
-        #          mode="M1",
-        #          time="year",
-        #          value=0.95*row.vol_yr_MCM,
-        #          unit="MCM/year"
-        #      ).pipe(
-        #          broadcast, year_act=year_all
-        #      )]
-        # )
-        # bound_act_lo_df = bound_act_lo_df[bound_act_lo_df["year_act"] >= 2025]
+        bound_act_lo_df = pd.concat(
+            [bound_act_lo_df,
+             make_df(
+                 "bound_activity_lo",
+                 node_loc=row.node_in,
+                 technology="ibwt_e_"+row.routes,
+                 mode="M1",
+                 time="year",
+                 value=0.8*0.6*row.vol_yr_MCM,  # capcity factor: 0.8
+                 unit="MCM/year"
+             ).pipe(
+                 broadcast, year_act=year_all
+             )]
+        )
+        bound_act_lo_df = bound_act_lo_df[bound_act_lo_df["year_act"] >= 2025]
 
-        # bound_act_up_df = pd.concat(
-        #     [bound_act_up_df,
-        #      make_df(
-        #          "bound_activity_up",
-        #          node_loc=row.node_in,
-        #          technology="ibwt_e_"+row.routes,
-        #          mode="M1",
-        #          time="year",
-        #          value=row.vol_yr_MCM,
-        #          unit="MCM/year"
-        #      ).pipe(
-        #          broadcast, year_act=year_all
-        #      )]
-        # )
-        # bound_act_up_df = bound_act_up_df[bound_act_up_df["year_act"] >= 2025]
+        bound_act_up_df = pd.concat(
+            [bound_act_up_df,
+             make_df(
+                 "bound_activity_up",
+                 node_loc=row.node_in,
+                 technology="ibwt_e_"+row.routes,
+                 mode="M1",
+                 time="year",
+                 value=0.8*row.vol_yr_MCM,  # capcity factor: 0.8
+                 unit="MCM/year"
+             ).pipe(
+                 broadcast, year_act=year_all
+             )]
+        )
+        bound_act_up_df = bound_act_up_df[bound_act_up_df["year_act"] >= 2025]
 
     result['input'] = input_df
     result['output'] = output_df
@@ -266,10 +270,10 @@ def inter_basin_water_transfer_exist(sc: Scenario) -> dict[str, pd.DataFrame]:
     result['historical_new_capacity'] = hist_new_cap_df
     result['fix_cost'] = fix_cost_df
     result['var_cost'] = var_cost_df
-    result['bound_total_capacity_lo'] = bound_total_cap_lo_df
+    # result['bound_total_capacity_lo'] = bound_total_cap_lo_df
     result['bound_total_capacity_up'] = bound_total_cap_up_df
-    # result['bound_activity_lo'] = bound_act_lo_df
-    # result['bound_activity_up'] = bound_act_up_df
+    result['bound_activity_lo'] = bound_act_lo_df
+    result['bound_activity_up'] = bound_act_up_df
 
     return result
 
@@ -292,7 +296,7 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
     """
 
     df = ibwt_data_preprocess()
-    # filter existing water transfer routes
+    # filter planned water transfer routes
     df_exist = df[df.status == "Planned"]
     df_exist_yr = df_exist[df_exist.time == "year"]
 

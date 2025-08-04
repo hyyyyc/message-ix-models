@@ -22,7 +22,7 @@ wt = pd.read_csv(PATH_wt, index_col=0).pipe(
     lambda df: df.groupby('basin_dest_id').sum().reset_index()
 )
 
-# add global IBWT from Julian
+# Add global IBWT from Julian
 wt_glo = pd.DataFrame({
     'basin_dest_id': ['96|AFR', '96|MEA', '97|NAM', '125|LAM'],
     'vol_yr_km3': [23.79456, 0, 23.79456, 31.72608]
@@ -37,16 +37,16 @@ df = pd.read_csv(PATH, index_col=0).pipe(
     lambda df: df.applymap(
         lambda x: x * -1 if isinstance(x, (int, float)) else x)  # value*-1
 )
-# add basin name according to BCU id
+# Add basin name according to BCU id
 df['basin_name'] = [id2name_dict[value] for value in list(df.BCU)]
-# filter
-# sta: add '96|AFR' and '96|MEA'
+# Filter
+# Sta: add '96|AFR' and '96|MEA'
 df_dest = pd.merge(df, wt, left_on='BCU', right_on='basin_dest_id', how='inner').pipe(
     lambda df: df.drop(columns='basin_dest_id')).pipe(
     lambda df: df.groupby('basin_name').sum().reset_index()
 )
 
-# calculate error bar
+# Calculate error bar
 df_dest['15C_min'] = df_dest[['15C_h08_gfdl-esm4', '15C_h08_ipsl-cm6a-lr',
                               '15C_h08_mpi-esm1-2-hr', '15C_h08_mri-esm2-0', '15C_h08_ukesm1-0-ll']].min(axis=1)
 df_dest['15C_max'] = df_dest[['15C_h08_gfdl-esm4', '15C_h08_ipsl-cm6a-lr',
@@ -62,22 +62,23 @@ df_dest['3C_error_low'] = df_dest['3C_average'] - df_dest['3C_min']
 df_dest['3C_error_high'] = df_dest['3C_max'] - df_dest['3C_average']
 
 # print(df_dest.columns)
-# save the data
+# Save the data
 df_dest.to_csv(os.path.join(out_path, 'water gaps vs water transfer.csv'))
 
-# plot
-df_dest = df_dest.sort_values(by='vol_yr_km3', ascending=False)  # 排序
+# Plot
+# Sort
+df_dest = df_dest.sort_values(by='vol_yr_km3', ascending=False)
 
-x = np.arange(len(df_dest['basin_name']))  # x轴位置
-y_columns = ['baseline', '15C_average', '3C_average', 'vol_yr_km3']  # 对比的字段
-width = 0.2  # 柱状图宽度
+# X-axis and y-axis
+x = np.arange(len(df_dest['basin_name']))
+y_columns = ['baseline', '15C_average', '3C_average', 'vol_yr_km3']
+width = 0.2
 
-# 全局设置字体大小
+# Font size
 plt.rcParams.update({'font.size': 16})
 
 fig, ax = plt.subplots(figsize=(10, 7))
 
-# 绘制柱状图
 bar1 = ax.bar(x - width * 1.5,
               df_dest['baseline'],
               width,
@@ -105,23 +106,23 @@ bar4 = ax.bar(x + width * 1.5,
               label='Designed water transfer volume',
               color='#6DE1D2')
 
-# 添加x,y轴标签
+# Add labels
 # ax.set_xlabel('Basin')
 ax.set_ylabel('Values (km$^3$/year)')
 # ax.set_title('Comparison of Baseline, 15C Average, 3C Average, and Vol Yr Km3')
 ax.set_xticks(x)
 ax.set_xticklabels(df_dest['basin_name'], rotation=25, ha="right")
 
-# 添加图例
+# Add legend
 ax.legend()
 
-# 显示网格
+# Grid
 ax.grid(axis='y', linestyle='--', alpha=0.7)
 
-# 保存
+# Save
 plt.savefig(os.path.join(out_path, 'water gap vs water transfer2.png'),
             dpi=300, bbox_inches='tight')
 
-# 显示图形
+# Show plot
 plt.tight_layout()
 plt.show()

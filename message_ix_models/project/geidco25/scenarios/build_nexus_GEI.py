@@ -4,8 +4,8 @@ from message_ix_models.model.water.cli import water_ini
 
 # 1) Create a new Context and point it at your existing base‐scenario
 ctx = Context()
-model = "MESSAGE_GLOBIOM_SSP2_v6.1"  # change this to GEI model
-base_scen = "baseline"  # change to GEI scen
+model = "MixG_GEIDCO5_SSP2_v6.1"  # change to GEI model
+base_scen = "Base_int_noIBWT"  # change to GEI scen
 ctx.handle_cli_args(url=f"ixmp://ixmp_dev/{model}/{base_scen}")
 
 # 2) "Pass" the same CLI options that `mix‐models … water-ix` would have done
@@ -23,7 +23,7 @@ ctx.REL = "high"
 sc_base = ctx.get_scenario()
 sc_new = sc_base.clone(
     model=f"{model}",
-    scenario=f"_{base_scen}_{ctx.SDG}_{ctx.nexus_set}_{ctx.RCP}_{ctx.REL}",
+    scenario="Base_RCP7_int_noIBWT",
     keep_solution=False,
 )
 build(ctx, sc_new)

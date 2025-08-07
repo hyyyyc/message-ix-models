@@ -147,13 +147,13 @@ def add_act_bound_exsiting(scen: message_ix.Scenario) -> None:
 mp = ixmp.Platform(name="ixmp_dev", jvmargs=["-Xmx14G"])
 
 # Source scenario based on existing model in the db
-model_sour = "MESSAGE_GLOBIOM_SSP2_v6.1_ibwt_t3"
-scen_sour = "baseline_nexus_7_high_ibwt_t3"
+model_sour = "MixG_GEIDCO5_SSP2_v6.1"
+scen_sour = "Base_RCP7_noint_noIBWT"
 sour_scen = message_ix.Scenario(mp, model=model_sour, scenario=scen_sour)
 
 # Target scenario
-model_tar = "MESSAGE_GLOBIOM_SSP2_v6.1_ibwt_t4"
-scen_tar = "baseline_nexus_7_high_ibwt_t4"
+model_tar = "MixG_GEIDCO5_SSP2_v6.1"
+scen_tar = "Base_RCP7_noint_IBWT"
 tar_scen = sour_scen.clone(model=model_tar, scenario=scen_tar,
                            keep_solution=False)
 

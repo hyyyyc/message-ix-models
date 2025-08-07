@@ -3,7 +3,7 @@ import pandas as pd
 from message_ix import (
     make_df,
     Scenario)
-from message_ix_models.model.water.utils import map_yv_ya_lt
+from message_ix_models.model.water.utils import get_vintage_and_active_years
 from message_ix_models.util import (
     package_data_path,
     broadcast
@@ -61,7 +61,7 @@ def inter_basin_water_transfer_exist(sc: Scenario) -> dict[str, pd.DataFrame]:
     first_year = sc.firstmodelyear
     # retrieve historic time-steps
     history = [y for y in year_all if y < first_year]
-    yv_ya_sw = map_yv_ya_lt(year_all, 70, first_year)
+    yv_ya_sw = get_vintage_and_active_years(year_all, 70, first_year)
 
     # returns of the function
     result = {}
@@ -306,7 +306,7 @@ def inter_basin_water_transfer_plan(sc) -> dict[str, pd.DataFrame]:
     first_year = sc.firstmodelyear
     # retrieve historic time-steps
     history = [y for y in year_all if y < first_year]
-    yv_ya_sw = map_yv_ya_lt(year_all, 70, first_year)
+    yv_ya_sw = get_vintage_and_active_years(year_all, 70, first_year)
 
     # returns of the function
     result = {}

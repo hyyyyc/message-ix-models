@@ -773,10 +773,15 @@ def report(sc: Scenario, reg: str, sdgs: bool = False) -> None:
         ibwt_var_dict[f"wtrs_{i}"] = report_iam.filter(
             variable=f"in|water_avail_basin|surfacewater_basin|ibwt_*_{i}|*").variable
 
+    extract_ibwt = report_iam.filter(
+        variable="out|water_avail_basin|surfacewater_basin|ibwt_*"
+    ).variable
+
     # mapping for aggregation
     map_agg_pd = pd.DataFrame(
         [
-            ["Water Extraction", extract_gw + extract_fgw + extract_sw, "km3/yr"],
+            ["Water Extraction", extract_gw + extract_fgw +
+                extract_sw + extract_ibwt, "km3/yr"],
             ["Water Extraction|Groundwater", extract_gw, "km3/yr"],
             ["Water Extraction|Brackish Water", extract_fgw, "km3/yr"],
             ["Water Extraction|Surface Water", extract_sw, "km3/yr"],
@@ -1303,6 +1308,12 @@ def report(sc: Scenario, reg: str, sdgs: bool = False) -> None:
             ],
 
             # Inter-basin water transfer
+            [
+                "Water Extraction|Interbasin Water Transfer",
+                extract_ibwt,
+                "km3/yr",
+            ],
+
             ["Water Transfer|Interbasin Water Transfer",
                 ibwt_var_dict["wtrs_1"] +
                 ibwt_var_dict["wtrs_2"] +
@@ -1864,7 +1875,7 @@ def report_full(sc: Scenario, reg: str, sdgs=False) -> None:
 # Connect to a db
 mp = ixmp.Platform(name="ixmp_dev", jvmargs=["-Xmx14G"])
 
-model = "MESSAGE_GLOBIOM_SSP2_v6.1_ibwt_t4"
-scen = "baseline_nexus_7_high_ibwt_t4"
+model = "MixG_GEIDCO5_SSP2_v6.1"
+scen = "Base_RCP7_noint_IBWT"
 scen_report = Scenario(mp, model=model, scenario=scen)
 report_full(scen_report, "R12", "baseline")

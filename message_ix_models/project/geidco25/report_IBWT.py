@@ -1826,7 +1826,7 @@ def report(sc: Scenario, reg: str, sdgs: bool = False) -> None:
     out_path = package_data_path().parents[0] / "reporting_output/"
     out_path.mkdir(exist_ok=True)
 
-    out_file = out_path / f"{sc.model}_{sc.scenario}_nexus.csv"
+    out_file = out_path / f"{sc.model}_{sc.scenario}_nexus_new.csv"
     report_pd.to_csv(out_file, index=False)
 
     sc.check_out(timeseries_only=True)
@@ -1875,7 +1875,7 @@ def report_full(sc: Scenario, reg: str, sdgs=False) -> None:
 # Connect to a db
 mp = ixmp.Platform(name="ixmp_dev", jvmargs=["-Xmx14G"])
 
-model = "MixG_GEIDCO5_SSP2_v6.1"
-scen = "Base_RCP7_noint_IBWT"
+model = "MESSAGE_GLOBIOM_SSP2_v6.1_ibwt_t4"
+scen = "baseline_nexus_7_high_ibwt_t4"
 scen_report = Scenario(mp, model=model, scenario=scen)
-report_full(scen_report, "R12", "baseline")
+report(scen_report, "R12", "baseline")

@@ -449,7 +449,367 @@ def prepare_ww(ww_input: pd.DataFrame, suban: bool) -> pd.DataFrame:
     return ww
 
 
+def report_ibwt(report_iam: pyam.IamDataFrame) -> pd.DataFrame:
+    # Inter-basin water transfer
+    ibwt_var_dict = {}
+    # 18 IBWT routes
+    for i in range(1, 19):
+        ibwt_var_dict[f"cap_{i}"] = report_iam.filter(
+            variable=f"CAP|capacity|ibwt_*_{i}").variable
+        ibwt_var_dict[f"inv_{i}"] = report_iam.filter(
+            variable=f"inv cost|ibwt_*_{i}").variable
+        ibwt_var_dict[f"totalom_{i}"] = report_iam.filter(
+            variable=f"total om cost|ibwt_*_{i}").variable
+        ibwt_var_dict[f"elec_{i}"] = report_iam.filter(
+            variable=f"in|final|electr|ibwt_*_{i}|*").variable
+        ibwt_var_dict[f"wtrs_{i}"] = report_iam.filter(
+            variable=f"in|water_avail_basin|surfacewater_basin|ibwt_*_{i}|*").variable
+
+    # couldn't work, the node_loc in output for ibwt is still "node_in"
+    # extract_ibwt = report_iam.filter(
+    #     variable="out|water_avail_basin|surfacewater_basin|ibwt_*"
+    # ).variable
+
+    map_agg_pd = pd.DataFrame(
+        [
+            # Inter-basin water transfer
+            # [
+            #     "Water Extraction|Interbasin Water Transfer",
+            #     extract_ibwt,
+            #     "km3/yr",
+            # ],
+
+            ["Water Transfer|Interbasin Water Transfer",
+                ibwt_var_dict["wtrs_1"] +
+                ibwt_var_dict["wtrs_2"] +
+                ibwt_var_dict["wtrs_3"] +
+                ibwt_var_dict["wtrs_4"] +
+                ibwt_var_dict["wtrs_5"] +
+                ibwt_var_dict["wtrs_6"] +
+                ibwt_var_dict["wtrs_7"] +
+                ibwt_var_dict["wtrs_8"] +
+                ibwt_var_dict["wtrs_10"] +
+                ibwt_var_dict["wtrs_11"] +
+                ibwt_var_dict["wtrs_12"] +
+                ibwt_var_dict["wtrs_13"] +
+                ibwt_var_dict["wtrs_14"] +
+                ibwt_var_dict["wtrs_15"] +
+                ibwt_var_dict["wtrs_16"] +
+                ibwt_var_dict["wtrs_17"] +
+                ibwt_var_dict["wtrs_18"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Existing",
+                ibwt_var_dict["wtrs_1"] +
+                ibwt_var_dict["wtrs_2"] +
+                ibwt_var_dict["wtrs_3"] +
+                ibwt_var_dict["wtrs_4"] +
+                ibwt_var_dict["wtrs_5"] +
+                ibwt_var_dict["wtrs_6"] +
+                ibwt_var_dict["wtrs_7"] +
+                ibwt_var_dict["wtrs_8"] +
+                ibwt_var_dict["wtrs_10"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Planned",
+                ibwt_var_dict["wtrs_11"] +
+                ibwt_var_dict["wtrs_12"] +
+                ibwt_var_dict["wtrs_13"] +
+                ibwt_var_dict["wtrs_14"] +
+                ibwt_var_dict["wtrs_15"] +
+                ibwt_var_dict["wtrs_16"] +
+                ibwt_var_dict["wtrs_17"] +
+                ibwt_var_dict["wtrs_18"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Existing|route1",
+                ibwt_var_dict["wtrs_1"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Existing|route2",
+                ibwt_var_dict["wtrs_2"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Existing|route3",
+                ibwt_var_dict["wtrs_3"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Existing|route4",
+                ibwt_var_dict["wtrs_4"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Existing|route5",
+                ibwt_var_dict["wtrs_5"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Existing|route6",
+                ibwt_var_dict["wtrs_6"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Existing|route7",
+                ibwt_var_dict["wtrs_7"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Existing|route8",
+                ibwt_var_dict["wtrs_8"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Existing|route10",
+                ibwt_var_dict["wtrs_10"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Planned|route11",
+                ibwt_var_dict["wtrs_11"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Planned|route12",
+                ibwt_var_dict["wtrs_12"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Planned|route13",
+                ibwt_var_dict["wtrs_13"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Planned|route14",
+                ibwt_var_dict["wtrs_14"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Planned|route15",
+                ibwt_var_dict["wtrs_15"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Planned|route16",
+                ibwt_var_dict["wtrs_16"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Planned|route17",
+                ibwt_var_dict["wtrs_17"], "km3/yr"],
+            ["Water Transfer|Interbasin Water Transfer|Planned|route18",
+                ibwt_var_dict["wtrs_18"], "km3/yr"],
+
+            ["Capacity|Interbasin Water Transfer",
+                ibwt_var_dict["cap_1"] +
+                ibwt_var_dict["cap_2"] +
+                ibwt_var_dict["cap_3"] +
+                ibwt_var_dict["cap_4"] +
+                ibwt_var_dict["cap_5"] +
+                ibwt_var_dict["cap_6"] +
+                ibwt_var_dict["cap_7"] +
+                ibwt_var_dict["cap_8"] +
+                ibwt_var_dict["cap_10"] +
+                ibwt_var_dict["cap_11"] +
+                ibwt_var_dict["cap_12"] +
+                ibwt_var_dict["cap_13"] +
+                ibwt_var_dict["cap_14"] +
+                ibwt_var_dict["cap_15"] +
+                ibwt_var_dict["cap_16"] +
+                ibwt_var_dict["cap_17"] +
+                ibwt_var_dict["cap_18"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Existing",
+                ibwt_var_dict["cap_1"] +
+                ibwt_var_dict["cap_2"] +
+                ibwt_var_dict["cap_3"] +
+                ibwt_var_dict["cap_4"] +
+                ibwt_var_dict["cap_5"] +
+                ibwt_var_dict["cap_6"] +
+                ibwt_var_dict["cap_7"] +
+                ibwt_var_dict["cap_8"] +
+                ibwt_var_dict["cap_10"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Planned",
+                ibwt_var_dict["cap_11"] +
+                ibwt_var_dict["cap_12"] +
+                ibwt_var_dict["cap_13"] +
+                ibwt_var_dict["cap_14"] +
+                ibwt_var_dict["cap_15"] +
+                ibwt_var_dict["cap_16"] +
+                ibwt_var_dict["cap_17"] +
+                ibwt_var_dict["cap_18"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Existing|route1",
+                ibwt_var_dict["cap_1"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Existing|route2",
+                ibwt_var_dict["cap_2"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Existing|route3",
+                ibwt_var_dict["cap_3"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Existing|route4",
+                ibwt_var_dict["cap_4"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Existing|route5",
+                ibwt_var_dict["cap_5"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Existing|route6",
+                ibwt_var_dict["cap_6"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Existing|route7",
+                ibwt_var_dict["cap_7"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Existing|route8",
+                ibwt_var_dict["cap_8"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Existing|route10",
+                ibwt_var_dict["cap_10"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Planned|route11",
+                ibwt_var_dict["cap_11"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Planned|route12",
+                ibwt_var_dict["cap_12"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Planned|route13",
+                ibwt_var_dict["cap_13"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Planned|route14",
+                ibwt_var_dict["cap_14"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Planned|route15",
+                ibwt_var_dict["cap_15"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Planned|route16",
+                ibwt_var_dict["cap_16"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Planned|route17",
+                ibwt_var_dict["cap_17"], "km3/yr"],
+            ["Capacity|Interbasin Water Transfer|Planned|route18",
+                ibwt_var_dict["cap_18"], "km3/yr"],
+
+            ["Final Energy|Interbasin Water Transfer",
+                ibwt_var_dict["elec_1"] +
+                ibwt_var_dict["elec_2"] +
+                ibwt_var_dict["elec_3"] +
+                ibwt_var_dict["elec_4"] +
+                ibwt_var_dict["elec_5"] +
+                ibwt_var_dict["elec_6"] +
+                ibwt_var_dict["elec_7"] +
+                ibwt_var_dict["elec_8"] +
+                ibwt_var_dict["elec_10"] +
+                ibwt_var_dict["elec_11"] +
+                ibwt_var_dict["elec_12"] +
+                ibwt_var_dict["elec_13"] +
+                ibwt_var_dict["elec_14"] +
+                ibwt_var_dict["elec_15"] +
+                ibwt_var_dict["elec_16"] +
+                ibwt_var_dict["elec_17"] +
+                ibwt_var_dict["elec_18"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Existing",
+                ibwt_var_dict["elec_1"] +
+                ibwt_var_dict["elec_2"] +
+                ibwt_var_dict["elec_3"] +
+                ibwt_var_dict["elec_4"] +
+                ibwt_var_dict["elec_5"] +
+                ibwt_var_dict["elec_6"] +
+                ibwt_var_dict["elec_7"] +
+                ibwt_var_dict["elec_8"] +
+                ibwt_var_dict["elec_10"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Planned",
+                ibwt_var_dict["elec_11"] +
+                ibwt_var_dict["elec_12"] +
+                ibwt_var_dict["elec_13"] +
+                ibwt_var_dict["elec_14"] +
+                ibwt_var_dict["elec_15"] +
+                ibwt_var_dict["elec_16"] +
+                ibwt_var_dict["elec_17"] +
+                ibwt_var_dict["elec_18"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Existing|route1",
+                ibwt_var_dict["elec_1"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Existing|route2",
+                ibwt_var_dict["elec_2"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Existing|route3",
+                ibwt_var_dict["elec_3"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Existing|route4",
+                ibwt_var_dict["elec_4"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Existing|route5",
+                ibwt_var_dict["elec_5"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Existing|route6",
+                ibwt_var_dict["elec_6"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Existing|route7",
+                ibwt_var_dict["elec_7"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Existing|route8",
+                ibwt_var_dict["elec_8"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Existing|route10",
+                ibwt_var_dict["elec_10"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Planned|route11",
+                ibwt_var_dict["elec_11"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Planned|route12",
+                ibwt_var_dict["elec_12"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Planned|route13",
+                ibwt_var_dict["elec_13"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Planned|route14",
+                ibwt_var_dict["elec_14"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Planned|route15",
+                ibwt_var_dict["elec_15"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Planned|route16",
+                ibwt_var_dict["elec_16"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Planned|route17",
+                ibwt_var_dict["elec_17"], "GWa"],
+            ["Final Energy|Interbasin Water Transfer|Planned|route18",
+                ibwt_var_dict["elec_18"], "GWa"],
+
+            ["Investment|Interbasin Water Transfer",
+                ibwt_var_dict["inv_11"] +
+                ibwt_var_dict["inv_12"] +
+                ibwt_var_dict["inv_13"] +
+                ibwt_var_dict["inv_14"] +
+                ibwt_var_dict["inv_15"] +
+                ibwt_var_dict["inv_16"] +
+                ibwt_var_dict["inv_17"] +
+                ibwt_var_dict["inv_18"], "million US$2010/yr"],
+            ["Investment|Interbasin Water Transfer|Planned",
+                ibwt_var_dict["inv_11"] +
+                ibwt_var_dict["inv_12"] +
+                ibwt_var_dict["inv_13"] +
+                ibwt_var_dict["inv_14"] +
+                ibwt_var_dict["inv_15"] +
+                ibwt_var_dict["inv_16"] +
+                ibwt_var_dict["inv_17"] +
+                ibwt_var_dict["inv_18"], "million US$2010/yr"],
+            ["Investment|Interbasin Water Transfer|Planned|route11",
+                ibwt_var_dict["inv_11"], "million US$2010/yr"],
+            ["Investment|Interbasin Water Transfer|Planned|route12",
+                ibwt_var_dict["inv_12"], "million US$2010/yr"],
+            ["Investment|Interbasin Water Transfer|Planned|route13",
+                ibwt_var_dict["inv_13"], "million US$2010/yr"],
+            ["Investment|Interbasin Water Transfer|Planned|route14",
+                ibwt_var_dict["inv_14"], "million US$2010/yr"],
+            ["Investment|Interbasin Water Transfer|Planned|route15",
+                ibwt_var_dict["inv_15"], "million US$2010/yr"],
+            ["Investment|Interbasin Water Transfer|Planned|route16",
+                ibwt_var_dict["inv_16"], "million US$2010/yr"],
+            ["Investment|Interbasin Water Transfer|Planned|route17",
+                ibwt_var_dict["inv_17"], "million US$2010/yr"],
+            ["Investment|Interbasin Water Transfer|Planned|route18",
+                ibwt_var_dict["inv_18"], "million US$2010/yr"],
+
+            ["Total Operation Management Cost|Interbasin Water Transfer",
+                ibwt_var_dict["totalom_1"] +
+                ibwt_var_dict["totalom_2"] +
+                ibwt_var_dict["totalom_3"] +
+                ibwt_var_dict["totalom_4"] +
+                ibwt_var_dict["totalom_5"] +
+                ibwt_var_dict["totalom_6"] +
+                ibwt_var_dict["totalom_7"] +
+                ibwt_var_dict["totalom_8"] +
+                ibwt_var_dict["totalom_10"] +
+                ibwt_var_dict["totalom_11"] +
+                ibwt_var_dict["totalom_12"] +
+                ibwt_var_dict["totalom_13"] +
+                ibwt_var_dict["totalom_14"] +
+                ibwt_var_dict["totalom_15"] +
+                ibwt_var_dict["totalom_16"] +
+                ibwt_var_dict["totalom_17"] +
+                ibwt_var_dict["totalom_18"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Existing",
+                ibwt_var_dict["totalom_1"] +
+                ibwt_var_dict["totalom_2"] +
+                ibwt_var_dict["totalom_3"] +
+                ibwt_var_dict["totalom_4"] +
+                ibwt_var_dict["totalom_5"] +
+                ibwt_var_dict["totalom_6"] +
+                ibwt_var_dict["totalom_7"] +
+                ibwt_var_dict["totalom_8"] +
+                ibwt_var_dict["totalom_10"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Planned",
+                ibwt_var_dict["totalom_11"] +
+                ibwt_var_dict["totalom_12"] +
+                ibwt_var_dict["totalom_13"] +
+                ibwt_var_dict["totalom_14"] +
+                ibwt_var_dict["totalom_15"] +
+                ibwt_var_dict["totalom_16"] +
+                ibwt_var_dict["totalom_17"] +
+                ibwt_var_dict["totalom_18"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Existing|route1",
+                ibwt_var_dict["totalom_1"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Existing|route2",
+                ibwt_var_dict["totalom_2"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Existing|route3",
+                ibwt_var_dict["totalom_3"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Existing|route4",
+                ibwt_var_dict["totalom_4"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Existing|route5",
+                ibwt_var_dict["totalom_5"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Existing|route6",
+                ibwt_var_dict["totalom_6"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Existing|route7",
+                ibwt_var_dict["totalom_7"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Existing|route8",
+                ibwt_var_dict["totalom_8"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Existing|route10",
+                ibwt_var_dict["totalom_10"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Planned|route11",
+                ibwt_var_dict["totalom_11"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Planned|route12",
+                ibwt_var_dict["totalom_12"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Planned|route13",
+                ibwt_var_dict["totalom_13"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Planned|route14",
+                ibwt_var_dict["totalom_14"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Planned|route15",
+                ibwt_var_dict["totalom_15"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Planned|route16",
+                ibwt_var_dict["totalom_16"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Planned|route17",
+                ibwt_var_dict["totalom_17"], "million US$2010/yr"],
+            ["Total Operation Management Cost|Interbasin Water Transfer|Planned|route18",
+                ibwt_var_dict["totalom_18"], "million US$2010/yr"],
+
+        ],
+        columns=["names", "list_cat", "unit"],
+    )
+    return map_agg_pd
+
 # TODO
+
+
 def report(sc: Scenario, reg: str, sdgs: bool = False) -> None:
     """Report nexus module results"""
     log.info(
@@ -763,26 +1123,6 @@ def report(sc: Scenario, reg: str, sdgs: bool = False) -> None:
     water_hydro_var = report_iam.filter(
         variable="Water Withdrawal|Electricity|Hydro|*"
     ).variable
-
-    # Inter-basin water transfer
-    ibwt_var_dict = {}
-    # 18 IBWT routes
-    for i in range(1, 19):
-        ibwt_var_dict[f"cap_{i}"] = report_iam.filter(
-            variable=f"CAP|capacity|ibwt_*_{i}").variable
-        ibwt_var_dict[f"inv_{i}"] = report_iam.filter(
-            variable=f"inv cost|ibwt_*_{i}").variable
-        ibwt_var_dict[f"totalom_{i}"] = report_iam.filter(
-            variable=f"total om cost|ibwt_*_{i}").variable
-        ibwt_var_dict[f"elec_{i}"] = report_iam.filter(
-            variable=f"in|final|electr|ibwt_*_{i}|*").variable
-        ibwt_var_dict[f"wtrs_{i}"] = report_iam.filter(
-            variable=f"in|water_avail_basin|surfacewater_basin|ibwt_*_{i}|*").variable
-
-    # couldn't work, the node_loc in output for ibwt is still "node_in"
-    # extract_ibwt = report_iam.filter(
-    #     variable="out|water_avail_basin|surfacewater_basin|ibwt_*"
-    # ).variable
 
     # mapping for aggregation
     map_agg_pd = pd.DataFrame(
@@ -1314,339 +1654,12 @@ def report(sc: Scenario, reg: str, sdgs: bool = False) -> None:
                 "million US$2010/yr",
             ],
 
-            # Inter-basin water transfer
-            # [
-            #     "Water Extraction|Interbasin Water Transfer",
-            #     extract_ibwt,
-            #     "km3/yr",
-            # ],
-
-            ["Water Transfer|Interbasin Water Transfer",
-                ibwt_var_dict["wtrs_1"] +
-                ibwt_var_dict["wtrs_2"] +
-                ibwt_var_dict["wtrs_3"] +
-                ibwt_var_dict["wtrs_4"] +
-                ibwt_var_dict["wtrs_5"] +
-                ibwt_var_dict["wtrs_6"] +
-                ibwt_var_dict["wtrs_7"] +
-                ibwt_var_dict["wtrs_8"] +
-                ibwt_var_dict["wtrs_10"] +
-                ibwt_var_dict["wtrs_11"] +
-                ibwt_var_dict["wtrs_12"] +
-                ibwt_var_dict["wtrs_13"] +
-                ibwt_var_dict["wtrs_14"] +
-                ibwt_var_dict["wtrs_15"] +
-                ibwt_var_dict["wtrs_16"] +
-                ibwt_var_dict["wtrs_17"] +
-                ibwt_var_dict["wtrs_18"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Existing",
-                ibwt_var_dict["wtrs_1"] +
-                ibwt_var_dict["wtrs_2"] +
-                ibwt_var_dict["wtrs_3"] +
-                ibwt_var_dict["wtrs_4"] +
-                ibwt_var_dict["wtrs_5"] +
-                ibwt_var_dict["wtrs_6"] +
-                ibwt_var_dict["wtrs_7"] +
-                ibwt_var_dict["wtrs_8"] +
-                ibwt_var_dict["wtrs_10"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Planned",
-                ibwt_var_dict["wtrs_11"] +
-                ibwt_var_dict["wtrs_12"] +
-                ibwt_var_dict["wtrs_13"] +
-                ibwt_var_dict["wtrs_14"] +
-                ibwt_var_dict["wtrs_15"] +
-                ibwt_var_dict["wtrs_16"] +
-                ibwt_var_dict["wtrs_17"] +
-                ibwt_var_dict["wtrs_18"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Existing|route1",
-                ibwt_var_dict["wtrs_1"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Existing|route2",
-                ibwt_var_dict["wtrs_2"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Existing|route3",
-                ibwt_var_dict["wtrs_3"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Existing|route4",
-                ibwt_var_dict["wtrs_4"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Existing|route5",
-                ibwt_var_dict["wtrs_5"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Existing|route6",
-                ibwt_var_dict["wtrs_6"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Existing|route7",
-                ibwt_var_dict["wtrs_7"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Existing|route8",
-                ibwt_var_dict["wtrs_8"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Existing|route10",
-                ibwt_var_dict["wtrs_10"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Planned|route11",
-                ibwt_var_dict["wtrs_11"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Planned|route12",
-                ibwt_var_dict["wtrs_12"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Planned|route13",
-                ibwt_var_dict["wtrs_13"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Planned|route14",
-                ibwt_var_dict["wtrs_14"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Planned|route15",
-                ibwt_var_dict["wtrs_15"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Planned|route16",
-                ibwt_var_dict["wtrs_16"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Planned|route17",
-                ibwt_var_dict["wtrs_17"], "km3/yr"],
-            ["Water Transfer|Interbasin Water Transfer|Planned|route18",
-                ibwt_var_dict["wtrs_18"], "km3/yr"],
-
-            ["Capacity|Interbasin Water Transfer",
-                ibwt_var_dict["cap_1"] +
-                ibwt_var_dict["cap_2"] +
-                ibwt_var_dict["cap_3"] +
-                ibwt_var_dict["cap_4"] +
-                ibwt_var_dict["cap_5"] +
-                ibwt_var_dict["cap_6"] +
-                ibwt_var_dict["cap_7"] +
-                ibwt_var_dict["cap_8"] +
-                ibwt_var_dict["cap_10"] +
-                ibwt_var_dict["cap_11"] +
-                ibwt_var_dict["cap_12"] +
-                ibwt_var_dict["cap_13"] +
-                ibwt_var_dict["cap_14"] +
-                ibwt_var_dict["cap_15"] +
-                ibwt_var_dict["cap_16"] +
-                ibwt_var_dict["cap_17"] +
-                ibwt_var_dict["cap_18"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Existing",
-                ibwt_var_dict["cap_1"] +
-                ibwt_var_dict["cap_2"] +
-                ibwt_var_dict["cap_3"] +
-                ibwt_var_dict["cap_4"] +
-                ibwt_var_dict["cap_5"] +
-                ibwt_var_dict["cap_6"] +
-                ibwt_var_dict["cap_7"] +
-                ibwt_var_dict["cap_8"] +
-                ibwt_var_dict["cap_10"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Planned",
-                ibwt_var_dict["cap_11"] +
-                ibwt_var_dict["cap_12"] +
-                ibwt_var_dict["cap_13"] +
-                ibwt_var_dict["cap_14"] +
-                ibwt_var_dict["cap_15"] +
-                ibwt_var_dict["cap_16"] +
-                ibwt_var_dict["cap_17"] +
-                ibwt_var_dict["cap_18"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Existing|route1",
-                ibwt_var_dict["cap_1"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Existing|route2",
-                ibwt_var_dict["cap_2"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Existing|route3",
-                ibwt_var_dict["cap_3"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Existing|route4",
-                ibwt_var_dict["cap_4"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Existing|route5",
-                ibwt_var_dict["cap_5"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Existing|route6",
-                ibwt_var_dict["cap_6"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Existing|route7",
-                ibwt_var_dict["cap_7"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Existing|route8",
-                ibwt_var_dict["cap_8"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Existing|route10",
-                ibwt_var_dict["cap_10"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Planned|route11",
-                ibwt_var_dict["cap_11"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Planned|route12",
-                ibwt_var_dict["cap_12"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Planned|route13",
-                ibwt_var_dict["cap_13"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Planned|route14",
-                ibwt_var_dict["cap_14"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Planned|route15",
-                ibwt_var_dict["cap_15"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Planned|route16",
-                ibwt_var_dict["cap_16"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Planned|route17",
-                ibwt_var_dict["cap_17"], "km3/yr"],
-            ["Capacity|Interbasin Water Transfer|Planned|route18",
-                ibwt_var_dict["cap_18"], "km3/yr"],
-
-            ["Final Energy|Interbasin Water Transfer",
-                ibwt_var_dict["elec_1"] +
-                ibwt_var_dict["elec_2"] +
-                ibwt_var_dict["elec_3"] +
-                ibwt_var_dict["elec_4"] +
-                ibwt_var_dict["elec_5"] +
-                ibwt_var_dict["elec_6"] +
-                ibwt_var_dict["elec_7"] +
-                ibwt_var_dict["elec_8"] +
-                ibwt_var_dict["elec_10"] +
-                ibwt_var_dict["elec_11"] +
-                ibwt_var_dict["elec_12"] +
-                ibwt_var_dict["elec_13"] +
-                ibwt_var_dict["elec_14"] +
-                ibwt_var_dict["elec_15"] +
-                ibwt_var_dict["elec_16"] +
-                ibwt_var_dict["elec_17"] +
-                ibwt_var_dict["elec_18"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Existing",
-                ibwt_var_dict["elec_1"] +
-                ibwt_var_dict["elec_2"] +
-                ibwt_var_dict["elec_3"] +
-                ibwt_var_dict["elec_4"] +
-                ibwt_var_dict["elec_5"] +
-                ibwt_var_dict["elec_6"] +
-                ibwt_var_dict["elec_7"] +
-                ibwt_var_dict["elec_8"] +
-                ibwt_var_dict["elec_10"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Planned",
-                ibwt_var_dict["elec_11"] +
-                ibwt_var_dict["elec_12"] +
-                ibwt_var_dict["elec_13"] +
-                ibwt_var_dict["elec_14"] +
-                ibwt_var_dict["elec_15"] +
-                ibwt_var_dict["elec_16"] +
-                ibwt_var_dict["elec_17"] +
-                ibwt_var_dict["elec_18"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Existing|route1",
-                ibwt_var_dict["elec_1"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Existing|route2",
-                ibwt_var_dict["elec_2"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Existing|route3",
-                ibwt_var_dict["elec_3"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Existing|route4",
-                ibwt_var_dict["elec_4"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Existing|route5",
-                ibwt_var_dict["elec_5"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Existing|route6",
-                ibwt_var_dict["elec_6"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Existing|route7",
-                ibwt_var_dict["elec_7"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Existing|route8",
-                ibwt_var_dict["elec_8"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Existing|route10",
-                ibwt_var_dict["elec_10"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Planned|route11",
-                ibwt_var_dict["elec_11"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Planned|route12",
-                ibwt_var_dict["elec_12"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Planned|route13",
-                ibwt_var_dict["elec_13"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Planned|route14",
-                ibwt_var_dict["elec_14"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Planned|route15",
-                ibwt_var_dict["elec_15"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Planned|route16",
-                ibwt_var_dict["elec_16"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Planned|route17",
-                ibwt_var_dict["elec_17"], "GWa"],
-            ["Final Energy|Interbasin Water Transfer|Planned|route18",
-                ibwt_var_dict["elec_18"], "GWa"],
-
-            ["Investment|Interbasin Water Transfer",
-                ibwt_var_dict["inv_11"] +
-                ibwt_var_dict["inv_12"] +
-                ibwt_var_dict["inv_13"] +
-                ibwt_var_dict["inv_14"] +
-                ibwt_var_dict["inv_15"] +
-                ibwt_var_dict["inv_16"] +
-                ibwt_var_dict["inv_17"] +
-                ibwt_var_dict["inv_18"], "million US$2010/yr"],
-            ["Investment|Interbasin Water Transfer|Planned",
-                ibwt_var_dict["inv_11"] +
-                ibwt_var_dict["inv_12"] +
-                ibwt_var_dict["inv_13"] +
-                ibwt_var_dict["inv_14"] +
-                ibwt_var_dict["inv_15"] +
-                ibwt_var_dict["inv_16"] +
-                ibwt_var_dict["inv_17"] +
-                ibwt_var_dict["inv_18"], "million US$2010/yr"],
-            ["Investment|Interbasin Water Transfer|Planned|route11",
-                ibwt_var_dict["inv_11"], "million US$2010/yr"],
-            ["Investment|Interbasin Water Transfer|Planned|route12",
-                ibwt_var_dict["inv_12"], "million US$2010/yr"],
-            ["Investment|Interbasin Water Transfer|Planned|route13",
-                ibwt_var_dict["inv_13"], "million US$2010/yr"],
-            ["Investment|Interbasin Water Transfer|Planned|route14",
-                ibwt_var_dict["inv_14"], "million US$2010/yr"],
-            ["Investment|Interbasin Water Transfer|Planned|route15",
-                ibwt_var_dict["inv_15"], "million US$2010/yr"],
-            ["Investment|Interbasin Water Transfer|Planned|route16",
-                ibwt_var_dict["inv_16"], "million US$2010/yr"],
-            ["Investment|Interbasin Water Transfer|Planned|route17",
-                ibwt_var_dict["inv_17"], "million US$2010/yr"],
-            ["Investment|Interbasin Water Transfer|Planned|route18",
-                ibwt_var_dict["inv_18"], "million US$2010/yr"],
-
-            ["Total Operation Management Cost|Interbasin Water Transfer",
-                ibwt_var_dict["totalom_1"] +
-                ibwt_var_dict["totalom_2"] +
-                ibwt_var_dict["totalom_3"] +
-                ibwt_var_dict["totalom_4"] +
-                ibwt_var_dict["totalom_5"] +
-                ibwt_var_dict["totalom_6"] +
-                ibwt_var_dict["totalom_7"] +
-                ibwt_var_dict["totalom_8"] +
-                ibwt_var_dict["totalom_10"] +
-                ibwt_var_dict["totalom_11"] +
-                ibwt_var_dict["totalom_12"] +
-                ibwt_var_dict["totalom_13"] +
-                ibwt_var_dict["totalom_14"] +
-                ibwt_var_dict["totalom_15"] +
-                ibwt_var_dict["totalom_16"] +
-                ibwt_var_dict["totalom_17"] +
-                ibwt_var_dict["totalom_18"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Existing",
-                ibwt_var_dict["totalom_1"] +
-                ibwt_var_dict["totalom_2"] +
-                ibwt_var_dict["totalom_3"] +
-                ibwt_var_dict["totalom_4"] +
-                ibwt_var_dict["totalom_5"] +
-                ibwt_var_dict["totalom_6"] +
-                ibwt_var_dict["totalom_7"] +
-                ibwt_var_dict["totalom_8"] +
-                ibwt_var_dict["totalom_10"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Planned",
-                ibwt_var_dict["totalom_11"] +
-                ibwt_var_dict["totalom_12"] +
-                ibwt_var_dict["totalom_13"] +
-                ibwt_var_dict["totalom_14"] +
-                ibwt_var_dict["totalom_15"] +
-                ibwt_var_dict["totalom_16"] +
-                ibwt_var_dict["totalom_17"] +
-                ibwt_var_dict["totalom_18"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Existing|route1",
-                ibwt_var_dict["totalom_1"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Existing|route2",
-                ibwt_var_dict["totalom_2"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Existing|route3",
-                ibwt_var_dict["totalom_3"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Existing|route4",
-                ibwt_var_dict["totalom_4"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Existing|route5",
-                ibwt_var_dict["totalom_5"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Existing|route6",
-                ibwt_var_dict["totalom_6"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Existing|route7",
-                ibwt_var_dict["totalom_7"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Existing|route8",
-                ibwt_var_dict["totalom_8"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Existing|route10",
-                ibwt_var_dict["totalom_10"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Planned|route11",
-                ibwt_var_dict["totalom_11"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Planned|route12",
-                ibwt_var_dict["totalom_12"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Planned|route13",
-                ibwt_var_dict["totalom_13"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Planned|route14",
-                ibwt_var_dict["totalom_14"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Planned|route15",
-                ibwt_var_dict["totalom_15"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Planned|route16",
-                ibwt_var_dict["totalom_16"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Planned|route17",
-                ibwt_var_dict["totalom_17"], "million US$2010/yr"],
-            ["Total Operation Management Cost|Interbasin Water Transfer|Planned|route18",
-                ibwt_var_dict["totalom_18"], "million US$2010/yr"],
-
         ],
         columns=["names", "list_cat", "unit"],
     )
+
+    map_agg_pd_ibwt = report_ibwt(report_iam)
+    map_agg_pd = pd.concat([map_agg_pd, map_agg_pd_ibwt], ignore_index=True)
 
     # Add water prices, ad-hoc procedure
     wp = sc.var(

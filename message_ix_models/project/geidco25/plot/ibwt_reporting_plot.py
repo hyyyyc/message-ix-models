@@ -5,12 +5,12 @@ import matplotlib.pyplot as plt
 from message_ix_models.util import package_data_path
 
 # Read data
-model = "MESSAGE_GLOBIOM_SSP2_v6.1_ibwt_t4"
-scen = "baseline_nexus_7_high_ibwt_t4"
+model = "MixG_GEIDCO5_SSP2_v6.1"
+scen = "Base_RCP7_int_IBWT_t1"
 data = package_data_path().parents[0] / \
     f"reporting_output/{model}_{scen}.csv"
 df = pd.read_csv(data)
-version = scen.split('_')[-1]
+version = scen
 
 
 def plot_by_region(df: pd.DataFrame) -> None:
@@ -256,3 +256,6 @@ def plot_by_route(df: pd.DataFrame) -> None:
             save_path = os.path.join(output_dir, filename)
             plt.savefig(save_path, dpi=300)
             plt.show()
+
+
+plot_by_route(df)

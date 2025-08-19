@@ -18,14 +18,14 @@ def get_gradient_colors(cmap_name, n, highlight_index=None, highlight_color=None
 
 
 # Read data
-model = "MESSAGE_GLOBIOM_SSP2_v6.1_ibwt_t4"
-scen = "baseline_nexus_7_high_ibwt_t4"
+model = "MixG_GEIDCO5_SSP2_v6.1"
+scen = "SDG_RCP7_noint_IBWT_t1"
 data = (
     package_data_path().parents[0]
     / f"reporting_output/{model}_{scen}.csv"
 )
 df = pd.read_csv(data)
-version = scen.split('_')[-1]
+version = scen
 
 output_dir = package_data_path(
 ).parents[0] / f"reporting_output/plot_ibwt/{version}"

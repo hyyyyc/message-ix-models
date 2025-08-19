@@ -18,7 +18,7 @@ plt.rcParams.update({
 
 # Read data
 model = "MixG_GEIDCO5_SSP2_v6.1"
-scen = "Base_RCP7_noint_IBWT_t1"
+scen = "SDG_RCP7_noint_IBWT_t1"
 data_file = (
     package_data_path().parents[0]
     / f"reporting_output/{model}_{scen}.csv"
@@ -108,19 +108,31 @@ for idx, ax in enumerate(axes):
             .pivot_table(index='Year', columns='Variable', values='Value', aggfunc='sum')
             .reindex(years, fill_value=0)
         )
-        # Plot stacked bars with increased width
-        bottom = np.zeros(len(years))
-        for j, var in enumerate(energy_vars):
-            vals = energy_df.get(var, pd.Series(0, index=years)).values
-            ax.bar(
+
+        # Ensure all variables exist as columns
+        for var in energy_vars:
+            if var not in energy_df.columns:
+                energy_df[var] = 0
+
+        # 准备序列，并确保顺序与 energy_vars 一致
+        series = [energy_df[var].to_numpy() for var in energy_vars]
+
+        # stackplot：注意用 *series 展开；且仅在一个子图上传 labels
+        if idx == 3:
+            ax.stackplot(
                 years,
-                vals,
-                bottom=bottom,
-                width=1.2,
-                label=labels[j] if idx == 3 else None,
-                color=colors[j]
+                *series,
+                colors=colors,
+                labels=labels,
+                alpha=0.9
             )
-            bottom += vals
+        else:
+            ax.stackplot(
+                years,
+                *series,
+                colors=colors,
+                alpha=0.9
+            )
 
         ax.set_title(region)
         ax.set_ylabel(unit_label)
@@ -129,11 +141,9 @@ for idx, ax in enumerate(axes):
         if idx >= (n_rows - 1) * n_cols:
             ax.set_xlabel('Year')
     else:
-        # Hide unused subplot
         ax.axis('off')
 
-# Legend on first subplot only
-# Reverse legend order on first subplot
+# 仅在第 4 个子图放图例（如果你想和面积层叠顺序一致，可以不反转）
 handles, labs = axes[3].get_legend_handles_labels()
 axes[3].legend(
     [handles[i] for i in reversed(range(len(handles)))],
@@ -142,7 +152,7 @@ axes[3].legend(
 )
 
 plt.tight_layout()
-filename = f"Energy_mix_regions.png"
+filename = "Energy_mix_regions_stackplot.png"
 save_path = os.path.join(output_dir, filename)
 plt.savefig(save_path, dpi=300)
 plt.show()

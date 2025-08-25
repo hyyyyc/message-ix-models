@@ -4,39 +4,39 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from message_ix_models.util import package_data_path
-
-
-def get_gradient_colors(cmap_name, n, highlight_index=None, highlight_color=None):
-    '''
-    Prepare color gradients with special color for Interbasin Water Transfer
-    '''
-    cmap = plt.get_cmap(cmap_name)
-    colors = [cmap(0.3 + 0.7 * i / (n - 1)) for i in range(n)]
-    if highlight_index is not None and highlight_color is not None:
-        colors[highlight_index] = highlight_color
-    return colors
-
+from message_ix_models.project.geidco25.plot.ibwt_reporting_plot import stan_data_stru
 
 # Read data
 model = "MixG_GEIDCO5_SSP2_v6.1"
-scen = "SDG_RCP7_noint_IBWT_t1"
+scen = "Base_RCP7_noint_IBWT_t1"
 data = (
     package_data_path().parents[0]
-    / f"reporting_output/{model}_{scen}.csv"
+    / f"reporting_output/{model}_{scen}_nexus.csv"
 )
 df = pd.read_csv(data)
-version = scen
+scenario = scen
 
+# Output path
 output_dir = package_data_path(
-).parents[0] / f"reporting_output/plot_ibwt/{version}"
+).parents[0] / f"reporting_output/plot_ibwt/{scenario}/water_balance"
 output_dir.mkdir(parents=True, exist_ok=True)
+
+# font size
+plt.rcParams.update({
+    "font.size": 15,
+    "axes.titlesize": 14,
+    "axes.labelsize": 12,
+    "xtick.labelsize": 10,
+    "ytick.labelsize": 10,
+    "legend.fontsize": 15
+})
 
 # Define variables
 supply = [
     "Water Extraction|Surface Water",
     "Water Extraction|Groundwater",
     "Water Waste|Reuse",
-    "Water Extraction|Brackish Water",
+    "Water Extraction|Fossil Groundwater",
     "Water Extraction|Seawater|Desalination"
 ]
 
@@ -45,15 +45,14 @@ supply_ibwt = [
     "Water Transfer|Interbasin Water Transfer",
     "Water Extraction|Groundwater",
     "Water Waste|Reuse",
-    "Water Extraction|Brackish Water",
+    "Water Extraction|Fossil Groundwater",
     "Water Extraction|Seawater|Desalination"
 ]
 
 withdrawal = [
-    "Water Withdrawal|Electricity",
-    "Water Withdrawal|Extraction",
-    "Water Withdrawal|Irrigation",
-    "Water Withdrawal|Industrial Water|Unconnected",
+    "Water Withdrawal|Electricity|Cooling|Fresh Water",
+    "Water Withdrawal|Irrigation_in",
+    "Water Withdrawal|Industrial Water",
     "Water Withdrawal|Municipal Water"
 ]
 
@@ -62,13 +61,12 @@ supply_label = [
     'IBWT',
     'Groundwater',
     'Reuse',
-    'Brackish Water',
+    'Fossil Groundwater',
     'Desalination'
 ]
 
 withdrawal_label = [
     'Electricity',
-    'Extraction',
     'Irrigation',
     'Industrial Water',
     'Municipal Water'
@@ -78,46 +76,98 @@ supply_dict = dict(zip(supply_ibwt, supply_label))
 withdrawal_dict = dict(zip(withdrawal, withdrawal_label))
 
 # Filter data for region
-regions = ['World|GLB region',
-           'China',
-           'Eastern Europe',
-           'Former Soviet Union',
-           'Latin America',
-           'Middle East and Africa',
-           'North America',
-           'Pacific Asia',
-           'Pacific OECD',
-           'Rest of Centrally planned Asia',
-           'South Asia',
-           'Subsaharan Africa',
-           'Western Europe']
+# regions = ['World',
+#            'China',
+#            'Eastern Europe',
+#            'Former Soviet Union',
+#            'Latin America',
+#            'Middle East and Africa',
+#            'North America',
+#            'Pacific Asia',
+#            'Pacific OECD',
+#            'Rest of Centrally planned Asia',
+#            'South Asia',
+#            'Subsaharan Africa',
+#            'Western Europe']
+
+regions = ['World',
+           'R12_CHN',
+           'R12_EEU',
+           'R12_FSU',
+           'R12_LAM',
+           'R12_MEA',
+           'R12_NAM',
+           'R12_PAS',
+           'R12_PAO',
+           'R12_RCPA',
+           'R12_SAS',
+           'R12_AFR',
+           'R12_WEU']
+
+
+def get_gradient_colors(cmap_name, n, highlight_index=None, highlight_color=None):
+    '''
+    Prepare color gradients with special color for water extraction and withdrawal.
+    If highlight_index and highlight_color are given, insert highlight_color
+    at the specified index and shift the rest of the colors.
+    '''
+    cmap = plt.get_cmap(cmap_name)
+    colors = [cmap(0.3 + 0.7 * i / (n - 1)) for i in range(n)]
+
+    if highlight_index is not None and highlight_color is not None:
+        # insert highlight_color, shift the later color down the sequence
+        colors.insert(highlight_index, highlight_color)
+
+    return colors
+
+
+def add_up_vars(df: pd.DataFrame) -> pd.DataFrame:
+    # Add up variables
+    ind_vars = [
+        "Water Withdrawal|Industrial Water|Unconnected Eff",
+        "Water Withdrawal|Industrial Water|Unconnected",
+    ]
+    df_ind = df[df["variable"].isin(ind_vars)].copy()
+
+    if not df_ind.empty:
+        # group by except variable, value
+        group_cols = [c for c in df_ind.columns if c not in [
+            "variable", "value"]]
+        df_ind_sum = (
+            df_ind.groupby(group_cols, as_index=False, sort=False)["value"]
+            .sum()
+            .assign(variable="Water Withdrawal|Industrial Water")
+        )
+        # substitute
+        df = pd.concat(
+            [df[~df["variable"].isin(ind_vars)], df_ind_sum],
+            ignore_index=True
+        )
+    return df
+
+
+df = add_up_vars(df)
+df = stan_data_stru(df)
 
 for i, region in enumerate(regions):
-    df_filter = df[df['Region'].str.contains(region, na=False)]
+    # Filter by region
+    df_filter = df[df['region'].str.contains(region, na=False)]
 
-    # Melt wide to long
-    df_cols = df_filter.columns.to_list()
-    df_cols_id = ['Model', 'Scenario', 'Region', 'Variable', 'Unit']
-    df_cols_yr = [c for c in df_cols if c not in df_cols_id]
-    df_long = df_filter.melt(
-        id_vars=df_cols_id,
-        value_vars=df_cols_yr,
-        var_name='Year',
-        value_name='Value'
-    )
-    df_long['Year'] = df_long['Year'].astype(int)
+    df_long = df_filter
 
-    # Years from 2020
-    years = sorted(df_long['Year'].unique())
-    years = [y for y in years if y >= 2020]
+    # Filter by year
+    years = sorted(df_long['year'].unique())
+    years = [y for y in years if y >= 2030]
+    # years = [y for y in years if (y >= 2030) & (y <= 2055)]
 
-    if region in ['World|GLB region', 'China', 'Subsaharan Africa']:
+    # regions with IBWT
+    if region in ['World', 'R12_CHN', 'R12_AFR'] and "noint_noIBWT" not in scen:
         # Pivot supply and withdrawal
-        sup_df = df_long[df_long['Variable'].isin(
-            supply_ibwt) & df_long['Year'].isin(years)]
+        sup_df = df_long[df_long['variable'].isin(
+            supply_ibwt) & df_long['year'].isin(years)]
         sup_table = (
-            sup_df.pivot_table(index='Year', columns='Variable',
-                               values='Value', aggfunc='sum')
+            sup_df.pivot_table(index='year', columns='variable',
+                               values='value', aggfunc='sum')
             .reindex(years, fill_value=0)
         )
         # Reorder columns to desired sequence
@@ -130,14 +180,14 @@ for i, region in enumerate(regions):
         # Use bright crimson for highlight
         highlight_color = (0.988, 0.608, 0.059, 1.0)  # RGBA bright color
         supply_cmap = get_gradient_colors('Reds', len(
-            supply_cols), highlight_idx, highlight_color)
+            supply_cols)-1, highlight_idx, highlight_color)
     else:
         # Pivot supply and withdrawal
-        sup_df = df_long[df_long['Variable'].isin(
-            supply) & df_long['Year'].isin(years)]
+        sup_df = df_long[df_long['variable'].isin(
+            supply) & df_long['year'].isin(years)]
         sup_table = (
-            sup_df.pivot_table(index='Year', columns='Variable',
-                               values='Value', aggfunc='sum')
+            sup_df.pivot_table(index='year', columns='variable',
+                               values='value', aggfunc='sum')
             .reindex(years, fill_value=0)
         )
         # Reorder columns to desired sequence
@@ -148,11 +198,11 @@ for i, region in enumerate(regions):
         # Use bright crimson for highlight
         supply_cmap = get_gradient_colors('Reds', len(supply_cols))
 
-    wth_df = df_long[df_long['Variable'].isin(
-        withdrawal) & df_long['Year'].isin(years)]
+    wth_df = df_long[df_long['variable'].isin(
+        withdrawal) & df_long['year'].isin(years)]
     wth_table = (
-        wth_df.pivot_table(index='Year', columns='Variable',
-                           values='Value', aggfunc='sum')
+        wth_df.pivot_table(index='year', columns='variable',
+                           values='value', aggfunc='sum')
         .reindex(years, fill_value=0)
     )
     wth_table = -wth_table
@@ -162,7 +212,7 @@ for i, region in enumerate(regions):
     # Create subplots with no vertical gap
     fig, (ax_sup, ax_wth) = plt.subplots(
         2, 1,
-        figsize=(8, 6),
+        figsize=(9, 6),
         sharex=True,
         gridspec_kw={'hspace': 0}
     )

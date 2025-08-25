@@ -6,11 +6,113 @@ from message_ix_models.util import package_data_path
 
 # Read data
 model = "MixG_GEIDCO5_SSP2_v6.1"
-scen = "Base_RCP7_int_IBWT_t1"
+scen = "Base_RCP7_noint_IBWT_t1"
 data = package_data_path().parents[0] / \
-    f"reporting_output/{model}_{scen}.csv"
+    f"reporting_output/{model}_{scen}_nexus.csv"
 df = pd.read_csv(data)
-version = scen
+scenario = scen
+
+# Output path
+output_dir = package_data_path(
+).parents[0] / f"reporting_output/plot_ibwt/{scenario}/IBWT"
+output_dir.mkdir(parents=True, exist_ok=True)
+
+# Font size
+plt.rcParams.update({
+    "font.size": 12,
+    "axes.titlesize": 14,
+    "axes.labelsize": 12,
+    "xtick.labelsize": 10,
+    "ytick.labelsize": 10,
+    "legend.fontsize": 11
+})
+
+# Planned or Existing
+plan_exist = [
+    'Planned',
+    'Existing'
+]
+
+# Convert route_id to source_destination
+route2basin = {
+    'route1': 'Yangtze->China Coast',
+    'route2': 'Yangtze->Ziya He Interior',
+    'route3': 'Yangtze->China Coast',
+    'route4': 'Huang He->Ziya He Interior',
+    'route5': 'Huang He->Ziya He Interior',
+    'route6': 'Yangtze->Huang He',
+    'route7': 'Yangtze->Ziya He Interor',
+    'route8': 'Yangtze->Huang He',
+    'route9': 'Ob->Gobi Interior',
+    'route10': 'Huang He->Yangtze',
+    'route11': 'Yangtze->Huang He',
+    'route12': 'Ganges Bramaputra->Huang He',
+    'route13': 'Ganges Bramaputra->Traim Interior',
+    'route14': 'Yangtze->Ziya He Interior',
+    'route15': 'Congo->Nile',
+    'route16': 'Congo->Nile',
+    'route17': 'Mississipy->Colorado',
+    'route18': 'Amazon->Sao Francisco'
+}
+
+# Themes to be plotted
+themes = [
+    'Capacity',
+    'Water Transfer',
+    'Investment',
+    'Total Operation Management Cost',
+    'Final Energy'
+]
+
+
+def stan_data_stru(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Standardize data structure:
+    1. Standardize column names
+    2. Wide to long
+    3. Convert unit
+    """
+    # lowercase first letter
+    new_columns = []
+    for col in df.columns:
+        if col and col[0].isupper():
+            new_columns.append(col[0].lower() + col[1:])
+        else:
+            new_columns.append(col)
+    df.columns = new_columns
+
+    # wide to long, if necessary
+    if "value" not in df.columns:
+        df_cols = df.columns.to_list()
+        df_cols_id = ['model', 'scenario', 'region', 'variable', 'unit']
+        df_cols_yr = [x for x in df_cols if x not in df_cols_id]
+
+        # Wide to long
+        df_long = df.melt(
+            id_vars=df_cols_id,
+            value_vars=df_cols_yr,
+            var_name='year',
+            value_name='value'
+        )
+    else:
+        df_long = df
+
+    # MCM/yr to km3/yr
+    mask = df_long['unit'] == 'MCM/yr'
+    df_long.loc[mask, 'value'] = df_long.loc[mask, 'value'] / 1000
+    df_long.loc[mask, 'unit'] = 'km3/yr'
+
+    return df_long
+
+
+def drop_all_zero_rows(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    If all values for the same region and variable are 0,
+    drop these data
+    """
+    mask = df.groupby(['region', 'variable'])[
+        'value'].transform(lambda x: (x != 0).any())
+    return df[mask].reset_index(drop=True)
 
 
 def plot_by_region(df: pd.DataFrame) -> None:
@@ -131,131 +233,97 @@ def plot_by_region(df: pd.DataFrame) -> None:
         plt.show()
 
 
-def plot_by_route(df: pd.DataFrame) -> None:
-    # Filter IBWT
-    df_filtered = df[
-        df['Variable'].str.contains('Interbasin Water Transfer', na=False)
-        & df['Variable'].str.contains('route', na=False)
-        & df['Region'].str.contains('World', na=False)]
+# Plot by route
+df_long = stan_data_stru(df)
+# Filter IBWT and year
+df_long = df_long[
+    df['variable'].str.contains('Interbasin Water Transfer', na=False)
+    & df['variable'].str.contains('route', na=False)
+    & df['region'].str.contains('World', na=False)]
 
-    df_cols = df_filtered.columns.to_list()
-    df_cols_id = ['Model', 'Scenario', 'Region', 'Variable', 'Unit']
-    df_cols_yr = [x for x in df_cols if x not in df_cols_id]
+df_long['year'] = df_long['year'].astype(float)
+df_long = df_long[(df_long["year"] >= 2030)]
+# df_long = df_long[(df_long["Year"] >= 2030) & (df_long["Year"] <= 2055)]
 
-    # Remove all value = 0
-    # Fill NaN as 0, check all value = 0
-    mask_nonzero = ~(df_filtered[df_cols_yr].fillna(0).eq(0).all(axis=1))
-    df_filtered = df_filtered.loc[mask_nonzero].copy()
+# split variable
+# Variable: theme | subvar | planned or exsiting | route
+split_cols = df_long['variable'].str.split('|', expand=True)
+split_cols.columns = ['theme', 'subvar', 'PE', 'route']
+df_long = pd.concat([df_long, split_cols], axis=1)
 
-    # Wide to long
-    df_long = df_filtered.melt(
-        id_vars=df_cols_id,
-        value_vars=df_cols_yr,
-        var_name='Year',
-        value_name='Value'
-    )
-    df_long['Year'] = df_long['Year'].astype(int)
+# drop 0 data
+df_long = drop_all_zero_rows(df_long)
 
-    # Variable: theme | subvar | planned or exsiting | route
-    split_cols = df_long['Variable'].str.split('|', expand=True)
-    split_cols.columns = ['theme', 'subvar', 'PE', 'route']
-    df_long = pd.concat([df_long, split_cols], axis=1)
+# Color
+routes = sorted(df_long['route'].unique())
+# color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
+custom_colors = [
+    "#1f77b4",
+    "#ff7f0e",
+    "#2ca02c",
+    "#d62728",
+    "#9467bd",
+    "#8c564b",
+    "#e377c2",
+    "#7f7f7f",
+    "#bcbd22",
+    "#17becf",
+    "#aec7e8",
+    "#ffbb78",
+    "#98df8a"
+]
 
-    # Planned or Existing
-    plan_exist = [
-        'Planned',
-        'Existing'
-    ]
+route_colors = {
+    route: custom_colors[i % len(custom_colors)]
+    for i, route in enumerate(routes)
+}
 
-    # Convert route_id to source_destination
-    route2basin = {
-        'route1': 'Yangtze->China Coast',
-        'route2': 'Yangtze->Ziya He Interior',
-        'route3': 'Yangtze->China Coast',
-        'route4': 'Huang He->Ziya He Interior',
-        'route5': 'Huang He->Ziya He Interior',
-        'route6': 'Yangtze->Huang He',
-        'route7': 'Yangtze->Ziya He Interor',
-        'route8': 'Yangtze->Huang He',
-        'route9': 'Ob->Gobi Interior',
-        'route10': 'Huang He->Yangtze',
-        'route11': 'Yangtze->Huang He',
-        'route12': 'Ganges Bramaputra->Huang He',
-        'route13': 'Ganges Bramaputra->Traim Interior',
-        'route14': 'Yangtze->Ziya He Interior',
-        'route15': 'Congo->Nile',
-        'route16': 'Conga->Nile',
-        'route17': 'Mississipy->Colorado',
-        'route18': 'Amazon->Sao Francisco'
-    }
+# Plot
+for pe in plan_exist:
+    df_pe = df_long[df_long['PE'].str.strip() == pe]
+    for theme in themes:
+        df_theme = df_pe[df_pe['theme'].str.strip() == theme]
+        if df_theme.empty:
+            print(f"'{theme}' no data")
+            continue
 
-    # Themes to be plotted
-    themes = [
-        'Capacity',
-        'Water Transfer',
-        'Investment',
-        'Total Operation Management Cost',
-        'Final Energy'
-    ]
+        # figure size
+        plt.figure(figsize=(8, 5))
+        # Group by region and Existing/Planned
+        for key, group in df_theme.groupby(['route']):
+            route = key[0]
+            linestyle = '-' if (group['PE'] == 'Existing').all() else '--'
+            plt.plot(
+                group['year'],
+                group['value'],
+                label=route2basin[route],
+                color=route_colors[route],
+                linestyle=linestyle,
+                marker='o',
+                markersize=4
+            )
 
-    # Output path
-    output_dir = package_data_path(
-    ).parents[0] / f"reporting_output/plot_ibwt/{version}"
-    output_dir.mkdir(parents=True, exist_ok=True)
+        plt.grid(True, color='lightgray', linestyle='-',
+                 linewidth=0.5, alpha=0.5)
 
-    # Color
-    routes = sorted(df_long['route'].unique())
-    color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
-    route_colors = {
-        route: color_cycle[i % len(color_cycle)]
-        for i, route in enumerate(routes)
-    }
+        # Add unit
+        units = df_theme['unit'].unique()
+        ylabel = f"{pe} {theme} ({units[0]})" if len(units) == 1 else "value"
 
-    # Plot
-    for pe in plan_exist:
-        df_pe = df_long[df_long['PE'].str.strip() == pe]
-        for theme in themes:
-            df_theme = df_pe[df_pe['theme'].str.strip() == theme]
-            if df_theme.empty:
-                print(f"'{theme}' no data")
-                continue
+        # plt.title(f"{theme} — Interbasin Water Transfer")
+        plt.xlabel('Year')
+        plt.ylabel(ylabel)
 
-            plt.figure(figsize=(8, 5))
-            # Group by region and Existing/Planned
-            for key, group in df_theme.groupby(['route']):
-                route = key[0]
-                linestyle = '-' if (group['PE'] == 'Existing').all() else '--'
-                plt.plot(
-                    group['Year'],
-                    group['Value'],
-                    label=route2basin[route],
-                    color=route_colors[route],
-                    linestyle=linestyle,
-                    marker='o',
-                    markersize=4
-                )
+        # y-axis from 0
+        plt.ylim(bottom=0)
 
-            plt.grid(True, color='lightgray', linestyle='-',
-                     linewidth=0.5, alpha=0.5)
+        # Legend
+        plt.legend()
 
-            # Add unit
-            units = df_theme['Unit'].unique()
-            ylabel = f"Value ({units[0]})" if len(units) == 1 else "Value"
-
-            plt.title(f"{theme} — Interbasin Water Transfer")
-            plt.xlabel('Year')
-            plt.ylabel(ylabel)
-
-            # Legend
-            plt.legend()
-
-            plt.grid(True)
-            plt.tight_layout()
-            # Save
-            filename = f"{pe}_{theme.replace(' ', '_')}_by_route.png"
-            save_path = os.path.join(output_dir, filename)
-            plt.savefig(save_path, dpi=300)
-            plt.show()
-
-
-plot_by_route(df)
+        plt.grid(True)
+        plt.tight_layout()
+        # Save
+        filename = f"{pe}_{theme.replace(' ', '_')}_by_route.png"
+        save_path = os.path.join(output_dir, filename)
+        plt.savefig(save_path, dpi=300)
+        plt.show()

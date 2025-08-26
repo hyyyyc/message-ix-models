@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from message_ix_models.util import package_data_path
+from message_ix_models.project.geidco25.plot.ibwt_reporting_plot import stan_data_stru
 
 # Read data
 model = "MixG_GEIDCO5_SSP2_v6.1"
@@ -95,10 +96,9 @@ def filter_series_labels_colors(energy_df, energy_vars, labels, colors):
     return series_list, labels_list, colors_list
 
 
-# filter by year
-df_long = df
-df_long['year'] = df_long['year'].astype(int)
+df_long = stan_data_stru(df)
 
+# filter by year
 years = sorted(df_long['year'].unique())
 # years = [y for y in years if (y >= 2030) & (y <= 2055)]
 years = [y for y in years if y >= 2030]

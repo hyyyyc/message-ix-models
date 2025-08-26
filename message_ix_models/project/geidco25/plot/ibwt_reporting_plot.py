@@ -70,7 +70,8 @@ def stan_data_stru(df: pd.DataFrame) -> pd.DataFrame:
     Standardize data structure:
     1. Standardize column names
     2. Wide to long
-    3. Convert unit
+    3. Change data type
+    4. Convert unit
     """
     # lowercase first letter
     new_columns = []
@@ -96,6 +97,9 @@ def stan_data_stru(df: pd.DataFrame) -> pd.DataFrame:
         )
     else:
         df_long = df
+
+    # confirm data type for 'year' as int
+    df_long['year'] = df_long['year'].astype(int)
 
     # MCM/yr to km3/yr
     mask = df_long['unit'] == 'MCM/yr'
@@ -241,7 +245,6 @@ df_long = df_long[
     & df['variable'].str.contains('route', na=False)
     & df['region'].str.contains('World', na=False)]
 
-df_long['year'] = df_long['year'].astype(float)
 df_long = df_long[(df_long["year"] >= 2030)]
 # df_long = df_long[(df_long["Year"] >= 2030) & (df_long["Year"] <= 2055)]
 

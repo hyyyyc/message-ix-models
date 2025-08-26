@@ -84,9 +84,10 @@ def stan_data_stru(df: pd.DataFrame) -> pd.DataFrame:
 
     # wide to long, if necessary
     if "value" not in df.columns:
-        df_cols = df.columns.to_list()
-        df_cols_id = ['model', 'scenario', 'region', 'variable', 'unit']
-        df_cols_yr = [x for x in df_cols if x not in df_cols_id]
+        id_list = ['model', 'scenario', 'region', 'variable', 'unit']
+        # id in df
+        df_cols_id = [c for c in df.columns if c in id_list]
+        df_cols_yr = [x for x in df.columns if x not in df_cols_id]
 
         # Wide to long
         df_long = df.melt(

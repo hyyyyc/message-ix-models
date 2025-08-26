@@ -4,8 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from message_ix_models.util import package_data_path
-from message_ix_models.project.geidco25.plot.final_energy_for_water import filter_series_labels_colors, get_colors
-from message_ix_models.project.geidco25.plot.ibwt_reporting_plot import stan_data_stru
+from message_ix_models.project.geidco25.plot.water_final_energy_for_water import filter_series_labels_colors, get_colors
+from message_ix_models.project.geidco25.plot.water_ibwt_reporting import stan_data_stru
 
 # Read data
 model = "MixG_GEIDCO5_SSP2_v6.1"

@@ -8,7 +8,7 @@ import pyam
 import ixmp
 from message_ix import Reporter, Scenario
 from message_ix_models.util import package_data_path
-
+from message_ix_models.model.water.report import report, report_full
 log = logging.getLogger(__name__)
 
 

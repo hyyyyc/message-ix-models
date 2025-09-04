@@ -143,17 +143,31 @@ def add_act_bound_exsiting(scen: message_ix.Scenario) -> None:
         scen.add_par("bound_activity_up", bound_act_up_df)
 
 
+def sa_irr_water_demand(scen: message_ix.Scenario) -> None:
+    '''
+    Sensitivity Analysis: change irrigation water demand
+    '''
+    old_irr_de = scen.par("land_input", filters={"commodity": "freshwater"})
+    with scen.transact("Remove old irrigation demand"):
+        scen.remove_par("land_input", old_irr_de)
+
+    new_irr_de = old_irr_de.copy()
+    new_irr_de["value"] = old_irr_de["value"] * 1.25
+    with scen.transact("Add new irrigation demand"):
+        scen.add_par("land_input", new_irr_de)
+
+
 # Connect to a db
 mp = ixmp.Platform(name="ixmp_dev", jvmargs=["-Xmx14G"])
 
 # Source scenario based on existing model in the db
-model_sour = "MixG_GEIDCO5_SSP2_v6.1"
-scen_sour = "Base_RCP7_noint_noIBWT"
+model_sour = "MESSAGE_GLOBIOM_SSP2_v6.1"
+scen_sour = "Reduced_Base_RCP7_noint_noIBWT_t2"
 sour_scen = message_ix.Scenario(mp, model=model_sour, scenario=scen_sour)
 
 # Target scenario
-model_tar = "MixG_GEIDCO5_SSP2_v6.1"
-scen_tar = "Base_RCP7_noint_IBWT"
+model_tar = "MESSAGE_GLOBIOM_SSP2_v6.1"
+scen_tar = "Reduced_SA_addIrrDemand25_Base_RCP7_noint_IBWT_t2"
 tar_scen = sour_scen.clone(model=model_tar, scenario=scen_tar,
                            keep_solution=False)
 
@@ -165,6 +179,8 @@ else:
     sys.exit()
 
 add_ibwt(tar_scen)
+# Sensitivity Analysis
+# sa_irr_water_demand(tar_scen)
 
 tar_scen.set_as_default()
 tar_scen.solve(solve_options={"lpmethod": "4", "scaind": "-1"})

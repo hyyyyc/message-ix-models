@@ -157,6 +157,23 @@ def sa_irr_water_demand(scen: message_ix.Scenario) -> None:
         scen.add_par("land_input", new_irr_de)
 
 
+def sa_oth_water_demand(scen: message_ix.Scenario) -> None:
+    water_receive_node = ["35|CHN", "162|CHN", "62|CHN",
+                          "148|CHN", "96|AFR", "96|MEA", "97|NAM", "125|LAM"]
+    old_wat_de = scen.par("demand", filters={"level": ["final"],
+                                             "commodity": ["urban_mw", "urban_disconnected",
+                                                           "rural_mw", "rural_disconnected",
+                                                           "industry_mw"],
+                                             "node": ['B'+x for x in water_receive_node]})
+    with scen.transact("Remove old other water demand"):
+        scen.remove_par("demand", old_wat_de)
+
+    new_wat_de = old_wat_de.copy()
+    new_wat_de["value"] = old_wat_de["value"] * 1.5
+    with scen.transact("Add new other water demand"):
+        scen.add_par("demand", new_wat_de)
+
+
 # Connect to a db
 mp = ixmp.Platform(name="ixmp_dev", jvmargs=["-Xmx14G"])
 
@@ -167,7 +184,7 @@ sour_scen = message_ix.Scenario(mp, model=model_sour, scenario=scen_sour)
 
 # Target scenario
 model_tar = "MESSAGE_GLOBIOM_SSP2_v6.1"
-scen_tar = "Reduced_SA_addIrrDemand25_Base_RCP7_noint_IBWT_t2"
+scen_tar = "Reduced_SA_addDemand5_Base_RCP7_noint_IBWT_t2"
 tar_scen = sour_scen.clone(model=model_tar, scenario=scen_tar,
                            keep_solution=False)
 
@@ -180,7 +197,7 @@ else:
 
 add_ibwt(tar_scen)
 # Sensitivity Analysis
-# sa_irr_water_demand(tar_scen)
+# sa_oth_water_demand(tar_scen)
 
 tar_scen.set_as_default()
 tar_scen.solve(solve_options={"lpmethod": "4", "scaind": "-1"})

@@ -4,17 +4,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from message_ix_models.util import package_data_path
-from message_ix_models.project.geidco25.plot.water_final_energy_for_water import filter_series_labels_colors, get_colors
-from message_ix_models.project.geidco25.plot.water_ibwt_reporting import stan_data_stru
+from message_ix_models.project.geidco25.data_processing.plot_dp import (
+    stan_data_stru, filter_series_labels_colors, fill_missing_region)
 
 # Read data
 model = "MixG_GEIDCO5_SSP2_v6.1"
-scen = "Base_RCP7_noint_noIBWT_t1"
+scen = "Base_RCP7_noint_noIBWT_t2"
 data_file = (
     package_data_path().parents[0]
-    / f"reporting_output/report_full/{model}_{scen}.csv"
+    / f"reporting_output/report_full_t2/{model}_{scen}.xlsx"
 )
-df = pd.read_csv(data_file)
+df = pd.read_excel(data_file, sheet_name="data")
+# becasue some bugs when running gei reporting with nexus scenario
+df = fill_missing_region(df)
 scenario = scen
 
 # Output path
@@ -35,20 +37,37 @@ plt.rcParams.update({
 
 # Define energy variables for secondary electricity
 energy_vars = [
-    "Secondary Energy|Electricity|Biomass",
     "Secondary Energy|Electricity|Coal",
     "Secondary Energy|Electricity|Gas",
-    "Secondary Energy|Electricity|Geothermal",
-    "Secondary Energy|Electricity|Hydro",
-    "Secondary Energy|Electricity|Nuclear",
     "Secondary Energy|Electricity|Oil",
+    "Secondary Energy|Electricity|Geothermal",
+    "Secondary Energy|Electricity|Nuclear",
+    "Secondary Energy|Electricity|Biomass",
+    "Secondary Energy|Electricity|Hydro",
     "Secondary Energy|Electricity|Solar",
-    "Secondary Energy|Electricity|Wind"
+    "Secondary Energy|Electricity|Wind",
+    "Secondary Energy|Electricity|Other"
 ]
 
-# Regions to plot in 4x4 grid
+# labels
+labels = [v.split('|')[-1] for v in energy_vars]
+
+# colors
+color_map = {
+    'Biomass': '#9e76c3',
+    'Coal': "#d43e33",
+    'Gas': '#ff8b26',
+    'Geothermal': '#c9a69e',
+    'Hydro': '#a7dde7',
+    'Nuclear': '#e377c2',
+    'Oil': "#100303D7",
+    'Solar': "#f3e48d",
+    'Wind': '#a2e295',
+    'Other': 'grey'
+}
+
 regions = [
-    'GLB region',
+    'World',
     'China',
     'Eastern Europe',
     'Former Soviet Union',
@@ -71,18 +90,12 @@ years = sorted(df_long['year'].unique())
 # years = [y for y in years if (y >= 2030) & (y <= 2055)]
 years = [y for y in years if y >= 2030]
 
-# colors
-colors = get_colors('tab20', len(energy_vars))
-# Swap colors for Biomass (index 0) and Hydro (index 4)
-colors[0], colors[4] = colors[4], colors[0]
-labels = [v.split('|')[-1] for v in energy_vars]
-
 # Determine unit label
 unit_label = 'EJ/yr'
 
 
 def panels():
-    # Create 4x4 subplot grid
+    # Create 3x4 subplot grid
     n_rows, n_cols = 3, 4
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(28, 16), sharex=True)
     axes = axes.flatten()
@@ -91,11 +104,11 @@ def panels():
         if idx < len(regions):
             region = regions[idx]
             # Filter for region
-            df_reg = df_long[df_long['Region'].str.contains(region, na=False)]
+            df_reg = df_long[df_long['region'].str.contains(region, na=False)]
             # Pivot to wide format
             energy_df = (
-                df_reg[df_reg['Variable'].isin(energy_vars)]
-                .pivot_table(index='Year', columns='Variable', values='Value', aggfunc='sum')
+                df_reg[df_reg['variable'].isin(energy_vars)]
+                .pivot_table(index='year', columns='variable', values='value', aggfunc='sum')
                 .reindex(years, fill_value=0)
             )
 
@@ -112,7 +125,7 @@ def panels():
                 ax.stackplot(
                     years,
                     *series,
-                    colors=colors,
+                    colors=[color_map[i] for i in labels],
                     labels=labels,
                     alpha=0.9
                 )
@@ -120,7 +133,7 @@ def panels():
                 ax.stackplot(
                     years,
                     *series,
-                    colors=colors,
+                    colors=[color_map[i] for i in labels],
                     alpha=0.9
                 )
 
@@ -133,7 +146,8 @@ def panels():
         else:
             ax.axis('off')
 
-    # 仅在第 4 个子图放图例（如果你想和面积层叠顺序一致，可以不反转）
+    # legend in axes[3]
+    # reverse legend
     handles, labs = axes[3].get_legend_handles_labels()
     axes[3].legend(
         [handles[i] for i in reversed(range(len(handles)))],
@@ -142,57 +156,76 @@ def panels():
     )
 
     plt.tight_layout()
-    filename = "Energy_mix_regions_stackplot.png"
+    filename = "Second_energy_mix_regions_stackplot.png"
     save_path = os.path.join(output_dir, filename)
     plt.savefig(save_path, dpi=300)
     plt.show()
 
 
-# plot by regions
-for region in regions:
-    # filter by regions
-    df_reg = df_long[df_long['region'].str.contains(region, na=False)]
+def plot_by_regions():
+    # plot by regions
+    for region in regions:
+        if region != "World":
+            # filter by regions
+            df_reg = df_long[df_long['region'].str.contains(region, na=False)]
 
-    # to wide
-    energy_df = (
-        df_reg[df_reg['variable'].isin(energy_vars)]
-        .pivot_table(index='year', columns='variable', values='value', aggfunc='sum')
-        .reindex(years, fill_value=0)
-    )
+            # to wide
+            energy_df = (
+                df_reg[df_reg['variable'].isin(energy_vars)]
+                .pivot_table(index='year', columns='variable', values='value', aggfunc='sum')
+                .reindex(years, fill_value=0)
+            )
 
-    # for var in energy_vars:
-    #     if var not in energy_df.columns:
-    #         energy_df[var] = 0
+            # for var in energy_vars:
+            #     if var not in energy_df.columns:
+            #         energy_df[var] = 0
+        else:
+            # sum up regions to world
+            df_energy = df_long[(df_long['variable'].isin(energy_vars)) &
+                                ~df_long["region"].isin(["World", "Missing region"])]
+            energy_df = (
+                df_energy
+                .pivot_table(index='year', columns='variable', values='value', aggfunc='sum')
+                .reindex(years, fill_value=0)
+            )
 
-    # filter non-zero records
-    series_plot, labels_plot, colors_plot = filter_series_labels_colors(
-        energy_df, energy_vars, labels, colors
-    )
+            # filter non-zero records
+        series_plot, labels_plot = filter_series_labels_colors(
+            energy_df, energy_vars, labels
+        )
 
-    # plot
-    fig, ax = plt.subplots(figsize=(12, 7))
-    ax.stackplot(
-        years,
-        *series_plot,
-        colors=colors_plot,
-        labels=labels_plot,
-        alpha=0.9
-    )
+        # plot
+        fig, ax = plt.subplots(figsize=(12, 7))
+        ax.stackplot(
+            years,
+            *series_plot,
+            colors=[color_map[i] for i in labels_plot],
+            labels=labels_plot,
+            alpha=0.9
+        )
 
-    ax.set_title(region)
-    ax.set_xlabel('Year')
-    ax.set_ylabel('Electricity (EJ/yr)')
-    ax.grid(True, color='lightgray', linestyle='--', linewidth=0.5, alpha=0.7)
+        ax.set_title(f"Electricity Mix ({region})")
+        ax.set_xlabel('Year')
+        ax.set_ylabel('Electricity (EJ/yr)')
+        ax.grid(True, color='lightgray', linestyle='--',
+                linewidth=0.5, alpha=0.7)
 
-    leg = ax.legend(
-        loc='upper left', bbox_to_anchor=(1.02, 1),
-        frameon=False, ncol=1, fontsize='small'
-    )
+        # Reverse legend order
+        handles, labels_re = ax.get_legend_handles_labels()
+        ax.legend(
+            [handles[i] for i in reversed(range(len(handles)))],
+            [labels_re[i] for i in reversed(range(len(labels_re)))],
+            loc='upper left', bbox_to_anchor=(1.02, 1),
+            frameon=False, ncol=1, fontsize='small'
+        )
 
-    plt.tight_layout()
+        plt.tight_layout()
 
-    # save
-    filename = f"Second_energy_mix_{region}_stackplot.png"
-    save_path = os.path.join(output_dir, filename)
-    plt.savefig(save_path, dpi=300, bbox_inches='tight')
-    plt.show()
+        # save
+        filename = f"Second_energy_mix_{region}_stackplot.png"
+        save_path = os.path.join(output_dir, filename)
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.show()
+
+
+plot_by_regions()

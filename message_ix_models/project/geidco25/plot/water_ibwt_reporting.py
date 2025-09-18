@@ -3,10 +3,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from message_ix_models.util import package_data_path
+from message_ix_models.project.geidco25.data_processing.plot_dp import stan_data_stru
 
 # Read data
 model = "MixG_GEIDCO5_SSP2_v6.1"
-scen = "Base_RCP7_noint_IBWT_t1"
+scen = "Base_RCP7_noint_IBWT_t3"
 data = package_data_path().parents[0] / \
     f"reporting_output/{model}_{scen}_nexus.csv"
 df = pd.read_csv(data)
@@ -14,7 +15,7 @@ scenario = scen
 
 # Output path
 output_dir = package_data_path(
-).parents[0] / f"reporting_output/plot_ibwt/{scenario}/IBWT"
+).parents[0] / f"reporting_output/plot_ibwt/{scenario}/IBWT_2060"
 output_dir.mkdir(parents=True, exist_ok=True)
 
 # Font size
@@ -63,51 +64,6 @@ themes = [
     'Total Operation Management Cost',
     'Final Energy'
 ]
-
-
-def stan_data_stru(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Standardize data structure:
-    1. Standardize column names
-    2. Wide to long
-    3. Change data type
-    4. Convert unit
-    """
-    # lowercase first letter
-    new_columns = []
-    for col in df.columns:
-        if col and col[0].isupper():
-            new_columns.append(col[0].lower() + col[1:])
-        else:
-            new_columns.append(col)
-    df.columns = new_columns
-
-    # wide to long, if necessary
-    if "value" not in df.columns:
-        id_list = ['model', 'scenario', 'region', 'variable', 'unit']
-        # id in df
-        df_cols_id = [c for c in df.columns if c in id_list]
-        df_cols_yr = [x for x in df.columns if x not in df_cols_id]
-
-        # Wide to long
-        df_long = df.melt(
-            id_vars=df_cols_id,
-            value_vars=df_cols_yr,
-            var_name='year',
-            value_name='value'
-        )
-    else:
-        df_long = df
-
-    # confirm data type for 'year' as int
-    df_long['year'] = df_long['year'].astype(int)
-
-    # MCM/yr to km3/yr
-    mask = df_long['unit'] == 'MCM/yr'
-    df_long.loc[mask, 'value'] = df_long.loc[mask, 'value'] / 1000
-    df_long.loc[mask, 'unit'] = 'km3/yr'
-
-    return df_long
 
 
 def drop_all_zero_rows(df: pd.DataFrame) -> pd.DataFrame:
@@ -246,8 +202,9 @@ df_long = df_long[
     & df['variable'].str.contains('route', na=False)
     & df['region'].str.contains('World', na=False)]
 
-df_long = df_long[(df_long["year"] >= 2030)]
-# df_long = df_long[(df_long["Year"] >= 2030) & (df_long["Year"] <= 2055)]
+# Filter by year
+# df_long = df_long[(df_long["year"] >= 2030)]
+df_long = df_long[(df_long["year"] >= 2030) & (df_long["year"] <= 2065)]
 
 # split variable
 # Variable: theme | subvar | planned or exsiting | route

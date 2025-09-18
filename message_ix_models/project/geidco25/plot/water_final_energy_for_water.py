@@ -4,11 +4,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from message_ix_models.util import package_data_path
-from message_ix_models.project.geidco25.plot.water_ibwt_reporting import stan_data_stru
+from message_ix_models.project.geidco25.data_processing.plot_dp import stan_data_stru, filter_series_labels_colors, get_colors
 
 # Read data
 model = "MixG_GEIDCO5_SSP2_v6.1"
-scen = "Base_RCP7_noint_IBWT_t1"
+scen = "Base_RCP7_noint_IBWT_t2"
 data_file = (
     package_data_path().parents[0]
     / f"reporting_output/{model}_{scen}_nexus.csv"
@@ -36,64 +36,51 @@ plt.rcParams.update({
 energy_vars = [
     "Final Energy|Commercial|Water|Desalination",
     "Final Energy|Commercial|Water|Groundwater Extraction",
+    "Final Energy|Commercial|Water|Surface Water Extraction",
     "Final Energy|Commercial|Water|Interbasin Water Transfer",
     "Final Energy|Commercial|Water|Reuse",
-    "Final Energy|Commercial|Water|Surface Water Extraction",
     "Final Energy|Commercial|Water|Transfer",
     "Final Energy|Commercial|Water|Treatment"
 ]
 
-# Regions to plot
-regions = ['World',
-           'R12_CHN',
-           'R12_EEU',
-           'R12_FSU',
-           'R12_LAM',
-           'R12_MEA',
-           'R12_NAM',
-           'R12_PAS',
-           'R12_PAO',
-           'R12_RCPA',
-           'R12_SAS',
-           'R12_AFR',
-           'R12_WEU']
-
 # label name
-label_map = {
-    "Groundwater Extraction": "GW Extraction",
-    "Surface Water Extraction": "SW Extraction",
-    "Interbasin Water Transfer": "IBWT"
+labels = [
+    "Desalination",
+    "GW Extraction",
+    "SW Extraction",
+    "IBWT",
+    "Reuse",
+    "Transfer",
+    "Treatment"
+]
+
+# colors
+color_map = {
+    "Desalination": "#1f77b4",
+    "GW Extraction": "#f59745",
+    "IBWT": "#da3c3d",
+    "Reuse": "#2ca02c",
+    "SW Extraction": "#42c2d1",
+    "Transfer": "#9878be",
+    "Treatment": "#7f7f7f"
 }
 
-
-def get_colors(cmap_name, n):
-    # Prepare colors and labels
-    cmap = plt.get_cmap(cmap_name)
-    return [cmap(i / (n - 1)) for i in range(n)]
-
-
-def pretty_label(var: str) -> str:
-    base = var.split('|')[-1]
-    return label_map.get(base, base)
-
-
-def filter_series_labels_colors(energy_df, energy_vars, labels, colors):
-    """
-    return non-zero records
-    series_list、labels_list、colors_list
-    """
-    valid_idx = []
-    for i, var in enumerate(energy_vars):
-        vals = energy_df[var].to_numpy(
-        ) if var in energy_df.columns else np.array([])
-        # abs>0 -> non-zero
-        if np.nansum(np.abs(vals)) > 0:
-            valid_idx.append(i)
-
-    series_list = [energy_df[energy_vars[i]].to_numpy() for i in valid_idx]
-    labels_list = [labels[i] for i in valid_idx]
-    colors_list = [colors[i] for i in valid_idx]
-    return series_list, labels_list, colors_list
+# Regions to plot
+regions = [
+    'World',
+    'China',
+    'Eastern Europe',
+    'Former Soviet Union',
+    'Latin America',
+    'Middle East and Africa',
+    'North America',
+    'Pacific Asia',
+    'Pacific OECD',
+    'Rest of Centrally planned Asia',
+    'South Asia',
+    'Subsaharan Africa',
+    'Western Europe'
+]
 
 
 df_long = stan_data_stru(df)
@@ -103,26 +90,20 @@ years = sorted(df_long['year'].unique())
 # years = [y for y in years if (y >= 2030) & (y <= 2055)]
 years = [y for y in years if y >= 2030]
 
-# colors
-colors = get_colors('tab20', len(energy_vars))
-# Swap colors for Biomass (index 0) and Hydro (index 4)
-colors[0], colors[4] = colors[4], colors[0]
-
-labels = [pretty_label(v) for v in energy_vars]
-
 # unit label
 unit_label = 'EJ/yr'
 
 
 def panels():
-    # Create 4x4 subplot grid
+    # Create 3x4 subplot grid
     n_rows, n_cols = 3, 4
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(28, 16), sharex=True)
     axes = axes.flatten()
 
+    region_new = [x for x in regions if x != "b"]
     for idx, ax in enumerate(axes):
-        if idx < len(regions):
-            region = regions[idx]
+        if idx < len(region_new):
+            region = region_new[idx]
             # Filter for region
             df_reg = df_long[df_long['region'].str.contains(region, na=False)]
             # Pivot to wide format
@@ -145,7 +126,7 @@ def panels():
                 ax.stackplot(
                     years,
                     *series,
-                    colors=colors,
+                    colors=[color_map[i] for i in labels],
                     labels=labels,
                     alpha=0.9
                 )
@@ -153,7 +134,7 @@ def panels():
                 ax.stackplot(
                     years,
                     *series,
-                    colors=colors,
+                    colors=[color_map[i] for i in labels],
                     alpha=0.9
                 )
 
@@ -181,53 +162,62 @@ def panels():
     plt.show()
 
 
-for region in regions:
-    # filter by region
-    df_reg = df_long[df_long['region'].str.contains(region, na=False)]
+def plot_by_regions():
+    for region in regions:
+        # filter by region
+        df_reg = df_long[df_long['region'].str.contains(region, na=False)]
 
-    # to wide
-    energy_df = (
-        df_reg[df_reg['variable'].isin(energy_vars)]
-        .pivot_table(index='year', columns='variable', values='value', aggfunc='sum')
-        .reindex(years, fill_value=0)
-    )
-
-    # for var in energy_vars:
-    #     if var not in energy_df.columns:
-    #         energy_df[var] = 0
-
-    # filter non-zero records
-    series_plot, labels_plot, colors_plot = filter_series_labels_colors(
-        energy_df, energy_vars, labels, colors
-    )
-
-    # figure size
-    fig, ax = plt.subplots(figsize=(12, 7))
-    if len(series_plot) > 0:
-        ax.stackplot(
-            years,
-            *series_plot,
-            colors=colors_plot,
-            labels=labels_plot,
-            alpha=0.9
+        # to wide
+        energy_df = (
+            df_reg[df_reg['variable'].isin(energy_vars)]
+            .pivot_table(index='year', columns='variable', values='value', aggfunc='sum')
+            .reindex(years, fill_value=0)
         )
-        ax.legend(
-            loc='upper left', bbox_to_anchor=(1.02, 1),
-            frameon=False, ncol=1, fontsize='small'
+
+        # for var in energy_vars:
+        #     if var not in energy_df.columns:
+        #         energy_df[var] = 0
+
+        # filter non-zero records
+        series_plot, labels_plot = filter_series_labels_colors(
+            energy_df, energy_vars, labels
         )
-    else:
-        ax.text(0.5, 0.5, 'No data', ha='center',
-                va='center', transform=ax.transAxes)
 
-    ax.set_title(region)
-    ax.set_xlabel('Year')
-    ax.set_ylabel('Final Energy for Water (EJ/yr)')
-    ax.grid(True, color='lightgray', linestyle='--', linewidth=0.5, alpha=0.7)
+        # figure size
+        fig, ax = plt.subplots(figsize=(12, 7))
+        if len(series_plot) > 0:
+            ax.stackplot(
+                years,
+                *series_plot,
+                colors=[color_map[i] for i in labels_plot],
+                labels=labels_plot,
+                alpha=0.9
+            )
+            # Reverse legend order
+            handles, labels_re = ax.get_legend_handles_labels()
+            ax.legend(
+                [handles[i] for i in reversed(range(len(handles)))],
+                [labels_re[i] for i in reversed(range(len(labels_re)))],
+                loc='upper left', bbox_to_anchor=(1.02, 1),
+                frameon=False, ncol=1, fontsize='small'
+            )
+        else:
+            ax.text(0.5, 0.5, 'No data', ha='center',
+                    va='center', transform=ax.transAxes)
 
-    plt.tight_layout()
+        ax.set_title(f"Final Energy for Water ({region})")
+        ax.set_xlabel('Year')
+        ax.set_ylabel('Energy (EJ/yr)')
+        ax.grid(True, color='lightgray', linestyle='--',
+                linewidth=0.5, alpha=0.7)
 
-    # save
-    filename = f"Final_Energy_{region}_stackplot.png"
-    save_path = os.path.join(output_dir, filename)
-    plt.savefig(save_path, dpi=300, bbox_inches='tight')
-    plt.show()
+        plt.tight_layout()
+
+        # save
+        filename = f"Final_Energy_{region}_stackplot.png"
+        save_path = os.path.join(output_dir, filename)
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.show()
+
+
+panels()

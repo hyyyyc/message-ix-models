@@ -23,12 +23,12 @@ mp = ixmp.Platform(name="ixmp_dev", jvmargs=["-Xmx14G"])
 
 # Source scenario based on existing model in the db
 model_sour = "MESSAGE_GLOBIOM_SSP2_v6.1"
-scen_sour = "baseline_G_nexus_7p0_high"
+scen_sour = "FullScale_baseline_baseline_nexus_7p0_high"
 sour_scen = message_ix.Scenario(mp, model=model_sour, scenario=scen_sour)
 
 # Target scenario
 model_tar = "MixG_GEIDCO5_SSP2_v6.1"
-scen_tar = "Base_RCP7_noint_noIBWT"
+scen_tar = "Base_RCP7_noint_noIBWT_t3"
 tar_scen = sour_scen.clone(model=model_tar, scenario=scen_tar,
                            keep_solution=False)
 

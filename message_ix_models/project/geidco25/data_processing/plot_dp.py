@@ -19,6 +19,28 @@ region_mapping = {
     'WEU': 'Western Europe'
 }
 
+basin_mapping = {
+    'B159|CHN': 'Yangtze',
+    'B35|CHN': 'China Coast',
+    'B162|CHN': 'Ziya He Interior',
+    'B62|CHN': 'Huang He',
+    'B38|AFR': 'Congo',
+    'B96|AFR': 'Nile',
+    'B96|MEA': 'Nile',
+    'B53|CHN': 'Ganges Bramaputra',
+    'B148|CHN': 'Tarim Interior',
+    'B90|NAM': 'Mississipy',
+    'B97|NAM': 'Colorado',
+    'B9|LAM': 'Amazon',
+    'B125|LAM': 'Sao Francisco'
+}
+
+basin_order = ['Yangtze', 'Ganges Bramaputra', 'Huang He', 'Ziya He Interior',
+               'China Coast', 'Tarim Interior',
+               'Congo', 'Nile',
+               'Mississipy', 'Colorado',
+               'Amazon', 'Sao Francisco']
+
 
 def stan_data_stru(df: pd.DataFrame) -> pd.DataFrame:
     """

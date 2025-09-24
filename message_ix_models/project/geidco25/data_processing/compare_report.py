@@ -67,8 +67,8 @@ def compare_and_pivot(file_a, file_b, out_file="comparison_result.xlsx"):
 
 # ----- Read Data -----
 model = "MixG_GEIDCO5_SSP2_v6.1"
-scen_a = "Base_RCP7_noint_noIBWT_t3_nexus"
-scen_b = "Base_RCP7_noint_IBWT_t3_nexus"
+scen_a = "Base_RCP7_noint_noIBWT_t2"
+scen_b = "Base_RCP7_noint_IBWT_t2"
 
 if "nexus" in scen_a:
     data_a = (

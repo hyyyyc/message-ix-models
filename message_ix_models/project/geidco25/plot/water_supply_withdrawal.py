@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from message_ix_models.util import package_data_path
 from message_ix_models.project.geidco25.data_processing.plot_dp import (
-    stan_data_stru, get_gradient_colors_water, add_industry_water)
+    stan_data_stru, get_gradient_colors_water)
 
 # Read data
 model = "MixG_GEIDCO5_SSP2_v6.1"
@@ -92,7 +92,6 @@ regions = ['World',
            'Western Europe']
 
 
-df = add_industry_water(df)
 df = stan_data_stru(df)
 
 for i, region in enumerate(regions):

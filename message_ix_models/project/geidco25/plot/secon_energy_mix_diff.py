@@ -27,7 +27,7 @@ df = fill_missing_region(df)
 
 # output path
 output_dir = package_data_path(
-).parents[0] / f"reporting_output/plot_diff/{scen_a}_{scen_b}/secon_energy_mix"
+).parents[0] / f"reporting_output/plot_diff/{scen_a}_{scen_b}/secon_energy_mix_2060"
 output_dir.mkdir(parents=True, exist_ok=True)
 
 # Increase default font size for all text elements
@@ -136,13 +136,13 @@ def active_var_indices(energy_df, energy_vars):
 
 df = clean_diff_df(df)
 # calculate noGEI vars
-df = add_noGEI_vars(df, id_cols=("Region", "Unit"))
+df = add_noGEI_vars(df, id_cols=("region", "unit"))
 df_long = stan_data_stru(df)
 
 # filter by year
 years = sorted(df_long['year'].unique())
-# years = [y for y in years if (y >= 2030) & (y <= 2055)]
-years = [y for y in years if (y >= 2030)]
+years = [y for y in years if (y >= 2030) & (y <= 2060)]
+# years = [y for y in years if (y >= 2030)]
 
 # Determine unit label
 unit_label = 'EJ/yr'
@@ -274,19 +274,57 @@ def plot_by_region():
             ax.text(0.5, 0.5, 'No data', ha='center',
                     va='center', transform=ax.transAxes)
         else:
-            bottom = np.zeros(len(years))
+            # bottom = np.zeros(len(years))
+            bottom_pos = np.zeros(len(years))
+            bottom_neg = np.zeros(len(years))
             for j in idx_active:
                 var = energy_vars[j]
                 vals = energy_df[var].to_numpy()
-                ax.bar(
-                    years,
-                    vals,
-                    bottom=bottom,
-                    width=2,
-                    color=colors[j],
-                    label=labels[j]
+
+                label = labels[j]
+
+                # 拆分正值/负值（负值保持为负数，高度为负即可向下画）
+                pos = np.where(vals > 0, vals, 0)
+                neg = np.where(vals < 0, vals, 0)
+
+                # 先画正值堆叠
+                if np.any(pos):
+                    ax.bar(
+                        years, pos, bottom=bottom_pos, width=2,
+                        color=color_map[label],
+                        hatch=hatch_map.get(label, ""),
+                        label=None   # 只在目标子图加图例项
+                    )
+                    bottom_pos += pos
+
+                # 再画负值堆叠（注意 bottom 用负向基线，height 传负数）
+                if np.any(neg):
+                    ax.bar(
+                        years, neg, bottom=bottom_neg, width=2,
+                        color=color_map[label],
+                        hatch=hatch_map.get(label, ""),
+                        label=None
+                    )
+                    bottom_neg += neg
+
+                handles = [
+                    Patch(
+                        facecolor=color_map[l],
+                        hatch=hatch_map.get(l, ""),
+                        label=l
+                    )
+                    for l in labels
+                ]
+
+                ax.legend(
+                    handles=[handles[i]
+                             for i in reversed(range(len(handles)))],
+                    labels=[labels[i] for i in reversed(range(len(labels)))],
+                    loc="upper left",
+                    bbox_to_anchor=(1.02, 1.09),
+                    labelspacing=0.3,
+                    frameon=False
                 )
-                bottom += vals
 
             handles, labs = ax.get_legend_handles_labels()
             if handles:
@@ -311,4 +349,5 @@ def plot_by_region():
         plt.show()
 
 
-panels()
+# panels()
+plot_by_region()

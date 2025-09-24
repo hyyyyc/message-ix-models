@@ -119,7 +119,7 @@ def get_colors(cmap_name, n):
     return [cmap(i / (n - 1)) for i in range(n)]
 
 
-def fill_missing_region(df: pd.DataFrame, col: str = "Region", new_reg: str = "Missing region") -> pd.DataFrame:
+def fill_missing_region(df: pd.DataFrame, col: str = "region", new_reg: str = "Missing region") -> pd.DataFrame:
     """
     Fill missing region in gei reporting
     """
@@ -131,8 +131,8 @@ def add_noGEI_vars(
     df: pd.DataFrame,
     techs: List[str] = None,
     base_prefix: str = "Secondary Energy|Electricity",
-    variable_col: str = "Variable",
-    id_cols: Sequence[str] = ("Model", "Region", "Scenario", "Unit"),
+    variable_col: str = "variable",
+    id_cols: Sequence[str] = ("model", "region", "scenario", "unit"),
     gei_suffix_map: Dict[str, List[str]] = None,
 ) -> pd.DataFrame:
     """

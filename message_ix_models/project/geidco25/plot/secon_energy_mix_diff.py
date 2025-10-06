@@ -16,14 +16,14 @@ Using gei reporting if GEI scenario
 # Read data
 model = "MixG_GEIDCO5_SSP2_v6.1"
 scen_a = "Base_RCP7_noint_noIBWT_t2"
-scen_b = "Base_RCP7_noint_IBWT_t2"
+scen_b = "Base_RCP7_int_noIBWT_t2"
 data_file = (
     package_data_path().parents[0]
     / f"reporting_output/report_diff/diff_{scen_a}_{scen_b}.xlsx"
 )
 df = pd.read_excel(data_file, sheet_name="differences")
 # becasue some bugs when running gei reporting with nexus scenario
-df = fill_missing_region(df)
+df = fill_missing_region(df, col="Region")
 
 # output path
 output_dir = package_data_path(
@@ -136,7 +136,7 @@ def active_var_indices(energy_df, energy_vars):
 
 df = clean_diff_df(df)
 # calculate noGEI vars
-df = add_noGEI_vars(df, id_cols=("region", "unit"))
+df = add_noGEI_vars(df, variable_col="Variable", id_cols=("Region", "Unit"))
 df_long = stan_data_stru(df)
 
 # filter by year
@@ -247,6 +247,105 @@ def panels():
     plt.show()
 
 
+def panels_ppt():
+    n_rows, n_cols = 3, 4
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(32, 21), sharex=True)
+    axes = axes.flatten()
+
+    for idx, ax in enumerate(axes):
+        if idx < len(regions):
+            region = regions[idx]
+            # Filter for region
+            df_reg = df_long[df_long['region'].str.contains(region, na=False)]
+            # Pivot to wide format
+            energy_df = (
+                df_reg[df_reg['variable'].isin(energy_vars)]
+                .pivot_table(index='year', columns='variable', values='value', aggfunc='sum')
+                .reindex(years, fill_value=0)
+            )
+            # Plot stacked bars with increased width
+            bottom_pos = np.zeros(len(years))
+            bottom_neg = np.zeros(len(years))
+            for j, var in enumerate(energy_vars):
+                label = labels[j]
+                vals = energy_df.get(var, pd.Series(0, index=years)).values
+
+                # 拆分正值/负值（负值保持为负数，高度为负即可向下画）
+                pos = np.where(vals > 0, vals, 0)
+                neg = np.where(vals < 0, vals, 0)
+
+                # 先画正值堆叠
+                if np.any(pos):
+                    ax.bar(
+                        years, pos, bottom=bottom_pos, width=2,
+                        color=color_map[label],
+                        hatch=hatch_map.get(label, ""),
+                        label=None   # 只在目标子图加图例项
+                    )
+                    bottom_pos += pos
+
+                # 再画负值堆叠（注意 bottom 用负向基线，height 传负数）
+                if np.any(neg):
+                    ax.bar(
+                        years, neg, bottom=bottom_neg, width=2,
+                        color=color_map[label],
+                        hatch=hatch_map.get(label, ""),
+                        label=None
+                    )
+                    bottom_neg += neg
+
+            ax.set_title(region)
+            ax.set_ylabel(unit_label)
+            ax.grid(True, color='lightgray', linestyle='--',
+                    linewidth=0.5, alpha=0.7)
+            if idx >= (n_rows - 1) * n_cols:
+                ax.set_xlabel('Year')
+
+        else:
+            # Hide unused subplot
+            ax.axis('off')
+
+    # # Legend on first subplot only
+    # # Reverse legend order on first subplot
+    # handles, labs = axes[3].get_legend_handles_labels()
+    # axes[3].legend(
+    #     [handles[i] for i in reversed(range(len(handles)))],
+    #     [labs[i] for i in reversed(range(len(labs)))],
+    #     loc='upper left', bbox_to_anchor=(1.02, 1), fontsize='small'
+    # )
+
+    # ----- Create a whole label -----
+    # # try to filter labels only exist in this df_long
+    # df_label = df_long[df_long['variable'].isin(energy_vars) &
+    #                    df_long['value'] != 0]
+    # label_origin = df_label['variable'].unique()
+    # labels2 = [var_label_map.get(v, v) for v in label_origin]
+
+    handles = [
+        Patch(
+            facecolor=color_map[l],
+            hatch=hatch_map.get(l, ""),
+            label=l
+        )
+        for l in labels
+    ]
+
+    axes[3].legend(
+        handles=[handles[i] for i in reversed(range(len(handles)))],
+        labels=[labels[i] for i in reversed(range(len(labels)))],
+        loc="upper left",
+        bbox_to_anchor=(1.02, 1.09),
+        labelspacing=0.3,
+        frameon=False
+    )
+
+    plt.tight_layout()
+    filename = f"Energy_mix_regions_diff_ppt.png"
+    save_path = os.path.join(output_dir, filename)
+    plt.savefig(save_path, dpi=300)
+    plt.show()
+
+
 def plot_by_region():
     # plot by regions
     for region in regions:
@@ -293,7 +392,7 @@ def plot_by_region():
                         years, pos, bottom=bottom_pos, width=2,
                         color=color_map[label],
                         hatch=hatch_map.get(label, ""),
-                        label=None   # 只在目标子图加图例项
+                        label=None
                     )
                     bottom_pos += pos
 
@@ -307,36 +406,35 @@ def plot_by_region():
                     )
                     bottom_neg += neg
 
-                handles = [
-                    Patch(
-                        facecolor=color_map[l],
-                        hatch=hatch_map.get(l, ""),
-                        label=l
-                    )
-                    for l in labels
-                ]
-
-                ax.legend(
-                    handles=[handles[i]
-                             for i in reversed(range(len(handles)))],
-                    labels=[labels[i] for i in reversed(range(len(labels)))],
-                    loc="upper left",
-                    bbox_to_anchor=(1.02, 1.09),
-                    labelspacing=0.3,
-                    frameon=False
+            handles = [
+                Patch(
+                    facecolor=color_map[l],
+                    hatch=hatch_map.get(l, ""),
+                    label=l
                 )
+                for l in [labels[i] for i in idx_active]
+            ]
 
-            handles, labs = ax.get_legend_handles_labels()
-            if handles:
-                ax.legend(
-                    handles, labs,
-                    loc='upper left', bbox_to_anchor=(1.02, 1),
-                    frameon=False, ncol=1, fontsize='small'
-                )
+            ax.legend(
+                handles=[handles[i]
+                         for i in reversed(range(len(handles)))],
+                loc="upper left",
+                bbox_to_anchor=(1.02, 1.09),
+                labelspacing=0.3,
+                frameon=False
+            )
 
-        ax.set_title(region)
+            # handles, labs = ax.get_legend_handles_labels()
+            # if handles:
+            #     ax.legend(
+            #         handles, labs,
+            #         loc='upper left', bbox_to_anchor=(1.02, 1),
+            #         frameon=False, ncol=1, fontsize='small'
+            #     )
+
+        ax.set_title(f"GEI - baseline ({region})")
         ax.set_xlabel('Year')
-        ax.set_ylabel(unit_label)
+        ax.set_ylabel(f"Electricity Generation ({unit_label})")
         ax.grid(True, color='lightgray', linestyle='--',
                 linewidth=0.5, alpha=0.7)
 
@@ -350,4 +448,4 @@ def plot_by_region():
 
 
 # panels()
-plot_by_region()
+panels_ppt()

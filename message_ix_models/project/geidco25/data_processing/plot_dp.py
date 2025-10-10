@@ -4,6 +4,28 @@ import matplotlib.pyplot as plt
 import re
 from typing import List, Sequence, Union, Dict
 
+# Convert route_id to source_destination
+route2basin = {
+    'route1': 'Yangtze->China Coast',
+    'route2': 'Yangtze->Ziya He Interior',
+    'route3': 'Yangtze->China Coast',
+    'route4': 'Huang He->Ziya He Interior',
+    'route5': 'Huang He->Ziya He Interior',
+    'route6': 'Yangtze->Huang He',
+    'route7': 'Yangtze->Ziya He Interor',
+    'route8': 'Yangtze->Huang He',
+    'route9': 'Ob->Gobi Interior',
+    'route10': 'Huang He->Yangtze',
+    'route11': 'Yangtze->Huang He',
+    'route12': 'Ganges Bramaputra->Huang He',
+    'route13': 'Ganges Bramaputra->Traim Interior',
+    'route14': 'Yangtze->Ziya He Interior',
+    'route15': 'Congo->Nile',
+    'route16': 'Congo->Nile',
+    'route17': 'Mississipy->Colorado',
+    'route18': 'Amazon->Sao Francisco'
+}
+
 region_mapping = {
     'CHN': 'China',
     'EEU': 'Eastern Europe',
@@ -29,7 +51,7 @@ basin_mapping = {
     'B96|MEA': 'Nile',
     'B53|CHN': 'Ganges Bramaputra',
     'B148|CHN': 'Tarim Interior',
-    'B90|NAM': 'Mississipy',
+    'B90|NAM': 'Mississippi',
     'B97|NAM': 'Colorado',
     'B9|LAM': 'Amazon',
     'B125|LAM': 'Sao Francisco'
@@ -38,8 +60,11 @@ basin_mapping = {
 basin_order = ['Yangtze', 'Ganges Bramaputra', 'Huang He', 'Ziya He Interior',
                'China Coast', 'Tarim Interior',
                'Congo', 'Nile',
-               'Mississipy', 'Colorado',
+               'Mississippi', 'Colorado',
                'Amazon', 'Sao Francisco']
+
+supply_basins = ["Yangtze", "Ganges Bramaputra",
+                 "Congo", "Mississippi", "Amazon"]
 
 
 def stan_data_stru(df: pd.DataFrame) -> pd.DataFrame:
@@ -272,3 +297,44 @@ def add_industry_water(df: pd.DataFrame) -> pd.DataFrame:
             ignore_index=True
         )
     return df
+
+
+def add_surface_remove_ibwt(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    在原始长表 df 基础上追加一批记录：
+    对 region 不以 "B" 开头的 (model, scenario, region, unit, year) 组合，
+    计算 new_value = SurfaceWater - IBWT（若 IBWT 缺失按 0），
+    生成变量名 "Water Extraction|Surface Water Remove IBWT" 的新行返回。
+
+    期望的列：model, scenario, region, variable, unit, year, value
+    """
+    SURF = "Water Extraction|Surface Water"
+    IBWT = "Water Transfer|Interbasin Water Transfer"
+    NEWV = "Water Extraction|Surface Water Remove IBWT"
+
+    # 只对不以 "B" 开头的地区做处理
+    mask_non_b = ~df["region"].astype(str).str.startswith("B")
+
+    # 取出 Surface 和 IBWT 两类数据（仅限非 B 地区）
+    surf = df[mask_non_b & (df["variable"] == SURF)].copy()
+    ibwt = df[mask_non_b & (df["variable"] == IBWT)].copy()
+
+    # 用主键合并（不含 variable）
+    id_list = ["model", "scenario", "region", "unit", "year"]
+    # id in df
+    keys = [c for c in df.columns if c in id_list]
+    merged = pd.merge(
+        surf, ibwt[keys + ["value"]], on=keys, how="left", suffixes=("_surf", "_ibwt")
+    )
+
+    # 缺失 IBWT 就按 0
+    merged["value_ibwt"] = merged["value_ibwt"].fillna(0)
+
+    # 计算新值
+    new_rows = merged[keys].copy()
+    new_rows["variable"] = NEWV
+    new_rows["value"] = merged["value_surf"] - merged["value_ibwt"]
+
+    # 把新行追加回原数据（原数据不作修改）
+    out = pd.concat([df, new_rows], ignore_index=True)
+    return out

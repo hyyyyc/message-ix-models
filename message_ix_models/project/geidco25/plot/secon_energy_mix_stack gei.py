@@ -17,25 +17,16 @@ data_file = (
 )
 df = pd.read_excel(data_file, sheet_name="data")
 # becasue some bugs when running gei reporting with nexus scenario
-df = fill_missing_region(df)
+df = fill_missing_region(df, col="Region")
 # calculate noGEI vars
-df = add_noGEI_vars(df)
+df = add_noGEI_vars(df, variable_col="Variable", id_cols=(
+    "Model", "Region", "Scenario", "Unit"))
 scenario = scen
 
 # Output path
 output_dir = package_data_path(
-).parents[0] / f"reporting_output/plot_ibwt/{scenario}/energy_mix"
+).parents[0] / f"reporting_output/plot_ibwt/{scenario}/energy_mix_2060"
 output_dir.mkdir(parents=True, exist_ok=True)
-
-# Increase default font size for all text elements
-plt.rcParams.update({
-    'axes.titlesize': 26,
-    'axes.labelsize': 24,
-    'xtick.labelsize': 22,
-    'ytick.labelsize': 22,
-    'legend.fontsize': 24,
-    'figure.titlesize': 26
-})
 
 # Define energy variables for secondary electricity
 energy_vars = [
@@ -124,14 +115,24 @@ df_long = stan_data_stru(df)
 
 # filter by year
 years = sorted(df_long['year'].unique())
-# years = [y for y in years if (y >= 2030) & (y <= 2055)]
-years = [y for y in years if y >= 2030]
+years = [y for y in years if (y >= 2030) & (y <= 2060)]
+# years = [y for y in years if y >= 2030]
 
 # Determine unit label
 unit_label = 'EJ/yr'
 
 
 def panels():
+    # Increase default font size for all text elements
+    plt.rcParams.update({
+        'axes.titlesize': 30,
+        'axes.labelsize': 28,
+        'xtick.labelsize': 26,
+        'ytick.labelsize': 26,
+        'legend.fontsize': 28,
+        'figure.titlesize': 30
+    })
+
     n_rows, n_cols = 3, 3
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(29, 26), sharex=True)
     axes = axes.flatten()
@@ -248,6 +249,16 @@ def panels():
 
 
 def plot_by_regions():
+    # Increase default font size for all text elements
+    plt.rcParams.update({
+        'axes.titlesize': 26,
+        'axes.labelsize': 24,
+        'xtick.labelsize': 22,
+        'ytick.labelsize': 22,
+        'legend.fontsize': 24,
+        'figure.titlesize': 26
+    })
+
     # plot by regions
     for region in regions:
         # filter by regions
@@ -297,7 +308,7 @@ def plot_by_regions():
         plt.tight_layout()
 
         # save
-        filename = f"Second_energy_mix_gei_{region}_stackplot.png"
+        filename = f"Second_energy_mix_gei_{region}.png"
         save_path = os.path.join(output_dir, filename)
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         plt.show()

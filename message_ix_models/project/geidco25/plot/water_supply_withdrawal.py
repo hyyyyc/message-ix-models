@@ -5,11 +5,11 @@ import matplotlib.pyplot as plt
 
 from message_ix_models.util import package_data_path
 from message_ix_models.project.geidco25.data_processing.plot_dp import (
-    stan_data_stru, get_gradient_colors_water)
+    stan_data_stru, get_gradient_colors_water, add_surface_remove_ibwt, add_industry_water)
 
 # Read data
 model = "MixG_GEIDCO5_SSP2_v6.1"
-scen = "Base_RCP7_noint_IBWT_t3"
+scen = "Base_RCP7_noint_IBWT_t2"
 data = (
     package_data_path().parents[0]
     / f"reporting_output/{model}_{scen}_nexus.csv"
@@ -34,7 +34,7 @@ plt.rcParams.update({
 
 # Define variables
 supply = [
-    "Water Extraction|Surface Water",
+    "Water Extraction|Surface Water Remove IBWT",
     "Water Extraction|Groundwater",
     "Water Waste|Reuse",
     "Water Extraction|Fossil Groundwater",
@@ -42,7 +42,7 @@ supply = [
 ]
 
 supply_ibwt = [
-    "Water Extraction|Surface Water",
+    "Water Extraction|Surface Water Remove IBWT",
     "Water Transfer|Interbasin Water Transfer",
     "Water Extraction|Groundwater",
     "Water Waste|Reuse",
@@ -93,6 +93,10 @@ regions = ['World',
 
 
 df = stan_data_stru(df)
+# for region-level, Surface Water = Surface Water - IBWT
+df = add_surface_remove_ibwt(df)
+# v2 and before: need to add IDW manually
+df = add_industry_water(df)
 
 for i, region in enumerate(regions):
     # Filter by region
@@ -204,7 +208,7 @@ for i, region in enumerate(regions):
         region_filename = "World"
     else:
         region_filename = region
-    filename = f"Water_balance_{region_filename}.png"
+    filename = f"Remove IBWT_Water_balance_{region_filename}.png"
     save_path = os.path.join(output_dir, filename)
     plt.savefig(save_path, dpi=300)
     plt.show()

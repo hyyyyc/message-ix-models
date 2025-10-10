@@ -10,8 +10,9 @@ from message_ix_models.project.geidco25.data_processing.plot_dp import (
 
 # ---- Read data -----
 model = "MixG_GEIDCO5_SSP2_v6.1"
-scen_a = "Base_RCP7_noint_noIBWT_t2"
-scen_b = "Base_RCP7_noint_IBWT_t2"
+climate = "Base_RCP7"
+scen_a = f"{climate}_noint_noIBWT_t2"
+scen_b = f"{climate}_noint_IBWT_t2"
 
 data_a = (
     package_data_path().parents[0]
@@ -40,7 +41,8 @@ plt.rcParams.update({
 
 vars = [
     "Water Withdrawal",
-    "Water Resource|Surface Water"
+    "Water Resource|Surface Water",
+    "Water Resource|Groundwater"
 ]
 
 scenario_dict = {
@@ -101,7 +103,7 @@ df_transfer_target['variable'] = 'water_import'
 # Water Transfer relevant basins
 basins = list(pd.unique(df_transfer[["region", "target"]].values.ravel()))
 # Filter basins
-basins_country = [x for x in basins if "CHN" not in x]
+basins_country = [x for x in basins if "CHN" in x]
 
 # Filter by water withdrawal and water resource
 df_filter = df_con[df_con['variable'].isin(vars) &
@@ -124,6 +126,7 @@ df_wide = df_wide.fillna(0)
 
 # ----- Calculate -----
 df_wide['Water Availability'] = df_wide['Water Resource|Surface Water'] + \
+    df_wide['Water Resource|Groundwater'] + \
     df_wide['water_export']+df_wide['water_import']
 
 df_wide['WS'] = df_wide['Water Withdrawal'] / \
@@ -176,10 +179,10 @@ ax.legend(handles=legend)
 
 # Output path
 output_dir = package_data_path(
-).parents[0] / f"reporting_output/plot_WSI/RCP7_2060"
+).parents[0] / f"reporting_output/plot_WSI/{climate}_2060"
 output_dir.mkdir(parents=True, exist_ok=True)
 
-fig_name = "WSI_other region.png"
+fig_name = "WSI_CHN.png"
 plt.tight_layout()
 plt.savefig(os.path.join(output_dir, fig_name), dpi=300)
 plt.show()

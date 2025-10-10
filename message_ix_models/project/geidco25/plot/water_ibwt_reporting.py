@@ -3,11 +3,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from message_ix_models.util import package_data_path
-from message_ix_models.project.geidco25.data_processing.plot_dp import stan_data_stru
+from message_ix_models.project.geidco25.data_processing.plot_dp import (
+    stan_data_stru, route2basin)
 
 # Read data
 model = "MixG_GEIDCO5_SSP2_v6.1"
-scen = "Base_RCP7_noint_IBWT_t3"
+scen = "EN1000f_RCP26_noint_IBWT_t2"
 data = package_data_path().parents[0] / \
     f"reporting_output/{model}_{scen}_nexus.csv"
 df = pd.read_csv(data)
@@ -33,28 +34,6 @@ plan_exist = [
     'Planned',
     'Existing'
 ]
-
-# Convert route_id to source_destination
-route2basin = {
-    'route1': 'Yangtze->China Coast',
-    'route2': 'Yangtze->Ziya He Interior',
-    'route3': 'Yangtze->China Coast',
-    'route4': 'Huang He->Ziya He Interior',
-    'route5': 'Huang He->Ziya He Interior',
-    'route6': 'Yangtze->Huang He',
-    'route7': 'Yangtze->Ziya He Interor',
-    'route8': 'Yangtze->Huang He',
-    'route9': 'Ob->Gobi Interior',
-    'route10': 'Huang He->Yangtze',
-    'route11': 'Yangtze->Huang He',
-    'route12': 'Ganges Bramaputra->Huang He',
-    'route13': 'Ganges Bramaputra->Traim Interior',
-    'route14': 'Yangtze->Ziya He Interior',
-    'route15': 'Congo->Nile',
-    'route16': 'Congo->Nile',
-    'route17': 'Mississipy->Colorado',
-    'route18': 'Amazon->Sao Francisco'
-}
 
 # Themes to be plotted
 themes = [
@@ -204,7 +183,7 @@ df_long = df_long[
 
 # Filter by year
 # df_long = df_long[(df_long["year"] >= 2030)]
-df_long = df_long[(df_long["year"] >= 2030) & (df_long["year"] <= 2065)]
+df_long = df_long[(df_long["year"] >= 2030) & (df_long["year"] <= 2060)]
 
 # split variable
 # Variable: theme | subvar | planned or exsiting | route
@@ -250,6 +229,7 @@ for pe in plan_exist:
 
         # figure size
         plt.figure(figsize=(8, 5))
+        # plt.figure(figsize=(7, 5))
         # Group by region and Existing/Planned
         for key, group in df_theme.groupby(['route']):
             route = key[0]

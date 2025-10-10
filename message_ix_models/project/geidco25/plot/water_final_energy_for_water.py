@@ -18,7 +18,7 @@ scenario = scen
 
 # Output path
 output_dir = package_data_path(
-).parents[0] / f"reporting_output/plot_ibwt/{scenario}/final_energy_water"
+).parents[0] / f"reporting_output/plot_ibwt/{scenario}/final_energy_water_2060"
 output_dir.mkdir(parents=True, exist_ok=True)
 
 # Increase default font size for all text elements
@@ -87,8 +87,8 @@ df_long = stan_data_stru(df)
 
 # filter by year
 years = sorted(df_long['year'].unique())
-# years = [y for y in years if (y >= 2030) & (y <= 2055)]
-years = [y for y in years if y >= 2030]
+years = [y for y in years if (y >= 2030) & (y <= 2060)]
+# years = [y for y in years if y >= 2030]
 
 # unit label
 unit_label = 'EJ/yr'
@@ -184,7 +184,7 @@ def plot_by_regions():
         )
 
         # figure size
-        fig, ax = plt.subplots(figsize=(12, 7))
+        fig, ax = plt.subplots(figsize=(10, 6))
         if len(series_plot) > 0:
             ax.stackplot(
                 years,
@@ -220,4 +220,4 @@ def plot_by_regions():
         plt.show()
 
 
-panels()
+plot_by_regions()

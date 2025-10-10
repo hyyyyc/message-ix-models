@@ -16,21 +16,21 @@ data_file = (
 )
 df = pd.read_excel(data_file, sheet_name="data")
 # becasue some bugs when running gei reporting with nexus scenario
-df = fill_missing_region(df)
+df = fill_missing_region(df, col="Region")
 
 scenario = scen
 # Output path
 output_dir = package_data_path(
-).parents[0] / f"reporting_output/plot_ibwt/{scenario}/energy_mix"
+).parents[0] / f"reporting_output/plot_ibwt/{scenario}/energy_mix_2060"
 output_dir.mkdir(parents=True, exist_ok=True)
 
 # Increase default font size for all text elements
 plt.rcParams.update({
     'font.size': 20,
-    'axes.titlesize': 16,
-    'axes.labelsize': 14,
-    'xtick.labelsize': 12,
-    'ytick.labelsize': 12,
+    'axes.titlesize': 18,
+    'axes.labelsize': 16,
+    'xtick.labelsize': 14,
+    'ytick.labelsize': 14,
     'legend.fontsize': 16,
     'figure.titlesize': 18
 })
@@ -52,6 +52,9 @@ color_map = {
 
 # ===== data processing =====
 df_long = stan_data_stru(df)
+# Filter year
+df_long = df_long[(df_long['year'] >= 2030) &
+                  (df_long['year'] <= 2060)]
 # Filter uhv
 df_uhv = df_long[df_long["variable"].str.startswith(
     "Secondary Energy|Electricity|UHV|To_")]
@@ -94,7 +97,7 @@ handles, labels_re = ax.get_legend_handles_labels()
 ax.legend(
     [handles[i] for i in reversed(range(len(handles)))],
     [labels[i] for i in reversed(range(len(labels)))],
-    loc='upper left'
+    loc='upper right'
 )
 
 # ===== ax2：Electricity Exports =====
@@ -130,7 +133,7 @@ handles, labels_re = ax.get_legend_handles_labels()
 ax.legend(
     [handles[i] for i in reversed(range(len(handles)))],
     [labels[i] for i in reversed(range(len(labels)))],
-    loc='upper left'
+    loc='upper right'
 )
 
 # save

@@ -447,5 +447,4 @@ def plot_by_region():
         plt.show()
 
 
-# panels()
-panels_ppt()
+panels()

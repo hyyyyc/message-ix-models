@@ -3,6 +3,8 @@ from matplotlib.patches import Patch
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+from message_ix_models.project.geidco25.data_processing.plot_dp import (
+    supply_basins)
 
 path = r'D:\IIASA\Data\calibration'
 file = 'com_water_balance.xlsx'
@@ -19,9 +21,6 @@ plt.rcParams.update({
 
 CHN_basin = ["Yangtze", "Ganges Bramaputra", "Tarim", "Huang He",
              "Ziya He", "China Coast"]
-
-supply_basins = ["Yangtze", "Ganges Bramaputra",
-                 "Congo", "Mississippi", "Amazon"]
 
 CHN = False
 
@@ -139,9 +138,9 @@ else:
     ax1.spines.bottom.set_visible(False)
     ax2.spines.top.set_visible(False)
 
-    ax1.tick_params(axis='x', length=0)  # 隐藏x轴刻度
+    ax1.tick_params(axis='x', length=0)  # hide x ticks
 
-    # 创建轴断刻度线，d用于调节其偏转角度
+    # broken axis line
     d = 0.5
     kwargs = dict(marker=[(-1, -d), (1, d)], markersize=10,
                   linestyle="none", color='k', mec='k', mew=1, clip_on=False)

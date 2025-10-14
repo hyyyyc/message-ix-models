@@ -146,6 +146,8 @@ def add_act_bound_exsiting(scen: message_ix.Scenario) -> None:
 def sa_irr_water_demand(scen: message_ix.Scenario) -> None:
     '''
     Sensitivity Analysis: change irrigation water demand
+    Warning: irrigation water demand is not at the basin-level
+    So it's adding water demand for both water-supplying and water-receiving basins
     '''
     old_irr_de = scen.par("land_input", filters={"commodity": "freshwater"})
     with scen.transact("Remove old irrigation demand"):
@@ -158,6 +160,11 @@ def sa_irr_water_demand(scen: message_ix.Scenario) -> None:
 
 
 def sa_oth_water_demand(scen: message_ix.Scenario) -> None:
+    '''
+    Sensitivity Analysis: change water demand other than irrigation
+    to control total water demand (irrigation + others) at the basin-level
+    but need to calculate a certain value instead of a ratio
+    '''
     water_receive_node = ["35|CHN", "162|CHN", "62|CHN",
                           "148|CHN", "96|AFR", "96|MEA", "97|NAM", "125|LAM"]
     old_wat_de = scen.par("demand", filters={"level": ["final"],
@@ -174,12 +181,42 @@ def sa_oth_water_demand(scen: message_ix.Scenario) -> None:
         scen.add_par("demand", new_wat_de)
 
 
+def sa_ibwt_cost(scen: message_ix.Scenario, ratio: float) -> None:
+    '''
+    Sensitivity Analysis: 
+    change investment, fixed and variable costs for IBWT technologies
+    '''
+    ibwt_techs = [x for x in scen.set("technology") if x.startswith('ibwt')]
+    old_inv = scen.par("inv_cost", filters={"technology": ibwt_techs})
+    old_fix = scen.par("fix_cost", filters={"technology": ibwt_techs})
+    old_var = scen.par("var_cost", filters={"technology": ibwt_techs})
+
+    # Remove old values
+    with scen.transact("Remove old IBWT cost"):
+        scen.remove_par("inv_cost", old_inv)
+        scen.remove_par("fix_cost", old_fix)
+        scen.remove_par("var_cost", old_var)
+
+    new_inv = old_inv.copy()
+    new_fix = old_fix.copy()
+    new_var = old_var.copy()
+    new_inv["value"] = old_inv["value"] * ratio
+    new_fix["value"] = old_fix["value"] * ratio
+    new_var["value"] = old_var["value"] * ratio
+
+    # Add new values
+    with scen.transact("Add new IBWT cost"):
+        scen.add_par("inv_cost", new_inv)
+        scen.add_par("fix_cost", new_fix)
+        scen.add_par("var_cost", new_var)
+
+
 # Connect to a db
 mp = ixmp.Platform(name="ixmp_dev", jvmargs=["-Xmx14G"])
 
 # Source scenario based on existing model in the db
 model_sour = "MESSAGE_GLOBIOM_SSP2_v6.1"
-scen_sour = "Reduced_Base_RCP7_noint_noIBWT_t2"
+scen_sour = "Reduced_Base_RCP7_noint_IBWT_t2"
 sour_scen = message_ix.Scenario(mp, model=model_sour, scenario=scen_sour)
 
 # Target scenario

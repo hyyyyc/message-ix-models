@@ -162,8 +162,10 @@ def sa_irr_water_demand(scen: message_ix.Scenario) -> None:
 def sa_oth_water_demand(scen: message_ix.Scenario) -> None:
     '''
     Sensitivity Analysis: change water demand other than irrigation
+    including industry, municipal(urban, rural)
+    Warning: municipal water demand↑ may increase xxx investment cost
+    Warning: need to calculate a certain value instead of a ratio 
     to control total water demand (irrigation + others) at the basin-level
-    but need to calculate a certain value instead of a ratio
     '''
     water_receive_node = ["35|CHN", "162|CHN", "62|CHN",
                           "148|CHN", "96|AFR", "96|MEA", "97|NAM", "125|LAM"]
@@ -171,6 +173,28 @@ def sa_oth_water_demand(scen: message_ix.Scenario) -> None:
                                              "commodity": ["urban_mw", "urban_disconnected",
                                                            "rural_mw", "rural_disconnected",
                                                            "industry_mw"],
+                                             "node": ['B'+x for x in water_receive_node]})
+    with scen.transact("Remove old other water demand"):
+        scen.remove_par("demand", old_wat_de)
+
+    new_wat_de = old_wat_de.copy()
+    new_wat_de["value"] = old_wat_de["value"] * 1.5
+    with scen.transact("Add new other water demand"):
+        scen.add_par("demand", new_wat_de)
+
+
+def sa_ind_water_demand(scen: message_ix.Scenario) -> None:
+    '''
+    Sensitivity Analysis: change industrial water demand
+    to make the variation in water demand less relevant to other sensitive variables 
+    (such as investment)
+    Warning: need to calculate a certain value instead of a ratio 
+    to control total water demand (irrigation + others) at the basin-level
+    '''
+    water_receive_node = ["35|CHN", "162|CHN", "62|CHN",
+                          "148|CHN", "96|AFR", "96|MEA", "97|NAM", "125|LAM"]
+    old_wat_de = scen.par("demand", filters={"level": ["final"],
+                                             "commodity": ["industry_mw"],
                                              "node": ['B'+x for x in water_receive_node]})
     with scen.transact("Remove old other water demand"):
         scen.remove_par("demand", old_wat_de)
@@ -218,6 +242,7 @@ mp = ixmp.Platform(name="ixmp_dev", jvmargs=["-Xmx14G"])
 model_sour = "MESSAGE_GLOBIOM_SSP2_v6.1"
 scen_sour = "Reduced_Base_RCP7_noint_IBWT_t2"
 sour_scen = message_ix.Scenario(mp, model=model_sour, scenario=scen_sour)
+
 
 # Target scenario
 model_tar = "MESSAGE_GLOBIOM_SSP2_v6.1"

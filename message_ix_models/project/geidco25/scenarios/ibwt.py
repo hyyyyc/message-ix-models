@@ -183,26 +183,60 @@ def sa_oth_water_demand(scen: message_ix.Scenario) -> None:
         scen.add_par("demand", new_wat_de)
 
 
-def sa_ind_water_demand(scen: message_ix.Scenario) -> None:
+def sa_add_ind_water_demand(scen: message_ix.Scenario, ratio: float) -> None:
     '''
-    Sensitivity Analysis: change industrial water demand
+    Sensitivity Analysis: add only industrial water demand
     to make the variation in water demand less relevant to other sensitive variables 
     (such as investment)
     Warning: need to calculate a certain value instead of a ratio 
     to control total water demand (irrigation + others) at the basin-level
+    Warning: don't use this function for minus industrial water demand
     '''
     water_receive_node = ["35|CHN", "162|CHN", "62|CHN",
                           "148|CHN", "96|AFR", "96|MEA", "97|NAM", "125|LAM"]
-    old_wat_de = scen.par("demand", filters={"level": ["final"],
-                                             "commodity": ["industry_mw"],
-                                             "node": ['B'+x for x in water_receive_node]})
-    with scen.transact("Remove old other water demand"):
-        scen.remove_par("demand", old_wat_de)
+    # Calculate all water demand
+    # irrigation water demand
+    irr_wat = scen.var("ACT", filters={"technology": ["basin_to_reg_plus"],
+                                       "mode": ['M'+x for x in water_receive_node]})
+    # other water demand
+    oth_wat = scen.par("demand", filters={"level": ["final"],
+                                          "commodity": ["urban_mw", "urban_disconnected",
+                                                        "rural_mw", "rural_disconnected",
+                                                        "industry_mw"],
+                                          "node": ['B'+x for x in water_receive_node]})
+    irr_wat['node'] = irr_wat['mode'].str.replace('^M', 'B', regex=True)
+    irr_wat['commodity'] = 'irrigation'
+    irr_wat['level'] = 'final'
+    irr_wat['year'] = irr_wat['year_act']
+    irr_wat['value'] = irr_wat['lvl']
+    irr_wat['unit'] = 'MCM/year'
 
-    new_wat_de = old_wat_de.copy()
-    new_wat_de["value"] = old_wat_de["value"] * 1.5
+    irr_wat_re = irr_wat[['node', 'commodity',
+                          'level', 'year', 'time', 'value', 'unit']]
+
+    water_demand = pd.concat([irr_wat_re, oth_wat])
+
+    water_demand_sta = water_demand.groupby(
+        ['node', 'year'], as_index=False)['value'].sum()
+    water_demand_sta['value_new'] = water_demand_sta['value']*ratio
+    water_demand_sta['value_change'] = water_demand_sta['value_new'] - \
+        water_demand_sta['value']
+
+    # Change industrial water demand
+    old_ind_wat = scen.par("demand", filters={"level": ["final"],
+                                              "commodity": ["industry_mw"],
+                                              "node": ['B'+x for x in water_receive_node]})
+    with scen.transact("Remove old industrial water demand"):
+        scen.remove_par("demand", old_ind_wat)
+
+    new_ind_wat_sta = pd.merge(old_ind_wat, water_demand_sta,
+                               how="inner", on=['node', 'year'])
+    new_ind_wat_sta["value"] = new_ind_wat_sta["value_x"] + \
+        new_ind_wat_sta['value_change']
+    new_ind_wat = new_ind_wat_sta[[
+        'node', 'commodity', 'level', 'year', 'time', 'value', 'unit']]
     with scen.transact("Add new other water demand"):
-        scen.add_par("demand", new_wat_de)
+        scen.add_par("demand", new_ind_wat)
 
 
 def sa_ibwt_cost(scen: message_ix.Scenario, ratio: float) -> None:
@@ -239,8 +273,8 @@ def sa_ibwt_cost(scen: message_ix.Scenario, ratio: float) -> None:
 mp = ixmp.Platform(name="ixmp_dev", jvmargs=["-Xmx14G"])
 
 # Source scenario based on existing model in the db
-model_sour = "MESSAGE_GLOBIOM_SSP2_v6.1"
-scen_sour = "Reduced_Base_RCP7_noint_IBWT_t2"
+model_sour = "MixG_GEIDCO5_SSP2_v6.1"
+scen_sour = "Base_RCP7_noint_IBWT_t3"
 sour_scen = message_ix.Scenario(mp, model=model_sour, scenario=scen_sour)
 
 
@@ -257,9 +291,9 @@ else:
     print("No water technology in the scenario.")
     sys.exit()
 
-add_ibwt(tar_scen)
+# add_ibwt(tar_scen)
 # Sensitivity Analysis
-# sa_oth_water_demand(tar_scen)
+sa_ibwt_cost(tar_scen, ratio=1.5)
 
 tar_scen.set_as_default()
 tar_scen.solve(solve_options={"lpmethod": "4", "scaind": "-1"})

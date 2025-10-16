@@ -275,6 +275,94 @@ def sa_ibwt_cost(scen: message_ix.Scenario, ratio: float) -> None:
         scen.add_par("var_cost", new_var)
 
 
+def sa_power_cost(scen: message_ix.Scenario, ratio: float) -> None:
+    '''
+    Sensitivity Analysis: 
+    change investment, fixed and variable costs for power generation technologies
+    including GEI relevant technologies
+    '''
+    # GEI relevant techs
+    gei_techs = [x for x in scen.set("technology") if "gei" in x or "uhv" in x]
+    # All power techs
+    power_tec = [
+        "coal_ppl",
+        "ucoal_ppl",
+        "coal_adv",
+        "coal_adv_ccs",
+        "igcc",
+        "igcc_ccs",
+        "foil_ppl",
+        "loil_ppl",
+        "loil_cc",
+        "gas_ppl",
+        "gas_ct",
+        "gas_cc",
+        "gas_cc_ccs",
+        "bio_ppl",
+        "bio_istig",
+        "bio_istig_ccs",
+        "geo_ppl",
+        "solar_res1",
+        "solar_res2",
+        "solar_res3",
+        "solar_res4",
+        "solar_res5",
+        "solar_res6",
+        "solar_res7",
+        "solar_res8",
+        "solar_res_RT1",
+        "solar_res_RT2",
+        "solar_res_RT3",
+        "solar_res_RT4",
+        "solar_res_RT5",
+        "solar_res_RT6",
+        "solar_res_RT7",
+        "solar_res_RT8",
+        "csp_sm1_res1",
+        "csp_sm1_res2",
+        "csp_sm1_res3",
+        "csp_sm1_res4",
+        "csp_sm1_res5",
+        "csp_sm1_res6",
+        "csp_sm1_res7",
+        "wind_res1",
+        "wind_res2",
+        "wind_res3",
+        "wind_res4",
+        "wind_ref1",
+        "wind_ref2",
+        "wind_ref3",
+        "wind_ref4",
+        "wind_ref5",
+        "nuc_lc",
+        "nuc_hc",
+        "nuc_fbr",
+    ] + gei_techs
+
+    old_inv = scen.par("inv_cost", filters={"technology": power_tec})
+    old_fix = scen.par("fix_cost", filters={"technology": power_tec})
+    old_var = scen.par("var_cost", filters={"technology": power_tec})
+
+    # Remove old values
+    with scen.transact("Remove old power generation cost"):
+        scen.remove_par("inv_cost", old_inv)
+        scen.remove_par("fix_cost", old_fix)
+        scen.remove_par("var_cost", old_var)
+
+    new_inv = old_inv.copy()
+    new_fix = old_fix.copy()
+    new_var = old_var.copy()
+    new_inv["value"] = old_inv["value"] * ratio
+    new_fix["value"] = old_fix["value"] * ratio
+    new_var["value"] = old_var["value"] * ratio
+
+    # Add new values
+    with scen.transact("Add new power generation cost"):
+        scen.add_par("inv_cost", new_inv)
+        scen.add_par("fix_cost", new_fix)
+        scen.add_par("var_cost", new_var)
+
+
 # Connect to a db
 mp = ixmp.Platform(name="ixmp_dev", jvmargs=["-Xmx14G"])
 
@@ -285,7 +373,7 @@ sour_scen = message_ix.Scenario(mp, model=model_sour, scenario=scen_sour)
 
 
 # Target scenario
-model_tar = "MESSAGE_GLOBIOM_SSP2_v6.1"
+model_tar = "MixG_GEIDCO5_SSP2_v6.1"
 scen_tar = "Reduced_SA_addDemand5_Base_RCP7_noint_IBWT_t2"
 tar_scen = sour_scen.clone(model=model_tar, scenario=scen_tar,
                            keep_solution=False)

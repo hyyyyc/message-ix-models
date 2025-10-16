@@ -143,25 +143,6 @@ def add_act_bound_exsiting(scen: message_ix.Scenario) -> None:
         scen.add_par("bound_activity_up", bound_act_up_df)
 
 
-def sa_rem_irr_water_demand(scen: message_ix.Scenario, ratio: float) -> None:
-    '''
-    Sensitivity Analysis: subtract irrigation water demand
-    Warning: irrigation water demand is not at the basin-level
-    So it's subtracting water demand for both water-supplying and water-receiving basins
-    '''
-    if ratio >= 1:
-        raise ValueError("The parameter 'ratio' must be lower than 1.")
-
-    old_irr_de = scen.par("land_input", filters={"commodity": "freshwater"})
-    with scen.transact("Remove old irrigation demand"):
-        scen.remove_par("land_input", old_irr_de)
-
-    new_irr_de = old_irr_de.copy()
-    new_irr_de["value"] = old_irr_de["value"] * ratio
-    with scen.transact("Add new irrigation demand"):
-        scen.add_par("land_input", new_irr_de)
-
-
 def sa_oth_water_demand(scen: message_ix.Scenario) -> None:
     '''
     Sensitivity Analysis: change water demand other than irrigation
@@ -243,6 +224,25 @@ def sa_add_ind_water_demand(scen: message_ix.Scenario, ratio: float) -> None:
         'node', 'commodity', 'level', 'year', 'time', 'value', 'unit']]
     with scen.transact("Add new industrial water demand"):
         scen.add_par("demand", new_ind_wat)
+
+
+def sa_rem_irr_water_demand(scen: message_ix.Scenario, ratio: float) -> None:
+    '''
+    Sensitivity Analysis: subtract irrigation water demand
+    Warning: irrigation water demand is not at the basin-level
+    So it's subtracting water demand for both water-supplying and water-receiving basins
+    '''
+    if ratio >= 1:
+        raise ValueError("The parameter 'ratio' must be lower than 1.")
+
+    old_irr_de = scen.par("land_input", filters={"commodity": "freshwater"})
+    with scen.transact("Remove old irrigation demand"):
+        scen.remove_par("land_input", old_irr_de)
+
+    new_irr_de = old_irr_de.copy()
+    new_irr_de["value"] = old_irr_de["value"] * ratio
+    with scen.transact("Add new irrigation demand"):
+        scen.add_par("land_input", new_irr_de)
 
 
 def sa_ibwt_cost(scen: message_ix.Scenario, ratio: float) -> None:

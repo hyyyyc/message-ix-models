@@ -143,18 +143,21 @@ def add_act_bound_exsiting(scen: message_ix.Scenario) -> None:
         scen.add_par("bound_activity_up", bound_act_up_df)
 
 
-def sa_irr_water_demand(scen: message_ix.Scenario) -> None:
+def sa_rem_irr_water_demand(scen: message_ix.Scenario, ratio: float) -> None:
     '''
-    Sensitivity Analysis: change irrigation water demand
+    Sensitivity Analysis: subtract irrigation water demand
     Warning: irrigation water demand is not at the basin-level
-    So it's adding water demand for both water-supplying and water-receiving basins
+    So it's subtracting water demand for both water-supplying and water-receiving basins
     '''
+    if ratio >= 1:
+        raise ValueError("The parameter 'ratio' must be lower than 1.")
+
     old_irr_de = scen.par("land_input", filters={"commodity": "freshwater"})
     with scen.transact("Remove old irrigation demand"):
         scen.remove_par("land_input", old_irr_de)
 
     new_irr_de = old_irr_de.copy()
-    new_irr_de["value"] = old_irr_de["value"] * 1.25
+    new_irr_de["value"] = old_irr_de["value"] * ratio
     with scen.transact("Add new irrigation demand"):
         scen.add_par("land_input", new_irr_de)
 
@@ -192,6 +195,9 @@ def sa_add_ind_water_demand(scen: message_ix.Scenario, ratio: float) -> None:
     to control total water demand (irrigation + others) at the basin-level
     Warning: don't use this function for minus industrial water demand
     '''
+    if ratio <= 1:
+        raise ValueError("The parameter 'ratio' must be greater than 1.")
+
     water_receive_node = ["35|CHN", "162|CHN", "62|CHN",
                           "148|CHN", "96|AFR", "96|MEA", "97|NAM", "125|LAM"]
     # Calculate all water demand
@@ -213,7 +219,7 @@ def sa_add_ind_water_demand(scen: message_ix.Scenario, ratio: float) -> None:
 
     irr_wat_re = irr_wat[['node', 'commodity',
                           'level', 'year', 'time', 'value', 'unit']]
-
+    # all water demand
     water_demand = pd.concat([irr_wat_re, oth_wat])
 
     water_demand_sta = water_demand.groupby(
@@ -235,7 +241,7 @@ def sa_add_ind_water_demand(scen: message_ix.Scenario, ratio: float) -> None:
         new_ind_wat_sta['value_change']
     new_ind_wat = new_ind_wat_sta[[
         'node', 'commodity', 'level', 'year', 'time', 'value', 'unit']]
-    with scen.transact("Add new other water demand"):
+    with scen.transact("Add new industrial water demand"):
         scen.add_par("demand", new_ind_wat)
 
 

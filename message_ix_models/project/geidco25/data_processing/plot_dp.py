@@ -26,6 +26,13 @@ route2basin = {
     'route18': 'Amazon->Sao Francisco'
 }
 
+route_colors = {
+    'Yangtze->Huang He': '#2ca02c',
+    'Ganges Bramaputra->Huang He': '#d52122',
+    'Yangtze->Ziya He Interior': '#9366bd',
+    'Congo->Nile': '#874e43'
+}
+
 region_mapping = {
     'CHN': 'China',
     'EEU': 'Eastern Europe',
@@ -65,6 +72,16 @@ basin_order = ['Yangtze', 'Ganges Bramaputra', 'Huang He', 'Ziya He Interior',
 
 supply_basins = ["Yangtze", "Ganges Bramaputra",
                  "Congo", "Mississippi", "Amazon"]
+
+scen_name_dict = {
+    'Base_RCP7_noint_noIBWT_t4': 'RCP7.0 baseline'
+}
+
+# Designed capacity
+df_designed_cap = pd.DataFrame({
+    'route': ['route11', 'route12', 'route13', 'route14', 'route15', 'route16', 'route17', 'route18'],
+    'designed': [17.4, 15, 10, 20, 9.52, 14.27, 23.79, 31.73]
+})
 
 
 def stan_data_stru(df: pd.DataFrame) -> pd.DataFrame:
@@ -301,25 +318,26 @@ def add_industry_water(df: pd.DataFrame) -> pd.DataFrame:
 
 def add_surface_remove_ibwt(df: pd.DataFrame) -> pd.DataFrame:
     """
-    在原始长表 df 基础上追加一批记录：
-    对 region 不以 "B" 开头的 (model, scenario, region, unit, year) 组合，
-    计算 new_value = SurfaceWater - IBWT（若 IBWT 缺失按 0），
-    生成变量名 "Water Extraction|Surface Water Remove IBWT" 的新行返回。
-
-    期望的列：model, scenario, region, variable, unit, year, value
+    for regions (China, Subsaharan Africa...)
+    Surface water = surface water - IBWT
     """
     SURF = "Water Extraction|Surface Water"
     IBWT = "Water Transfer|Interbasin Water Transfer"
-    NEWV = "Water Extraction|Surface Water Remove IBWT"
+    NEWV = "Water Extraction|Surface Water"
 
-    # 只对不以 "B" 开头的地区做处理
-    mask_non_b = ~df["region"].astype(str).str.startswith("B")
+    # filter region-level and scenarios with IBWT
+    mask_non_b = (
+        ~df["region"].str.startswith("B") &
+        df['scenario'].str.contains('_IBWT_'))
 
-    # 取出 Surface 和 IBWT 两类数据（仅限非 B 地区）
+    # filter sw and IBWT
     surf = df[mask_non_b & (df["variable"] == SURF)].copy()
     ibwt = df[mask_non_b & (df["variable"] == IBWT)].copy()
 
-    # 用主键合并（不含 variable）
+    # delete old sw
+    df = df.drop(surf.index)
+
+    # merge
     id_list = ["model", "scenario", "region", "unit", "year"]
     # id in df
     keys = [c for c in df.columns if c in id_list]
@@ -327,14 +345,14 @@ def add_surface_remove_ibwt(df: pd.DataFrame) -> pd.DataFrame:
         surf, ibwt[keys + ["value"]], on=keys, how="left", suffixes=("_surf", "_ibwt")
     )
 
-    # 缺失 IBWT 就按 0
+    # fill NA
     merged["value_ibwt"] = merged["value_ibwt"].fillna(0)
 
-    # 计算新值
+    # calculate sw-IBWT
     new_rows = merged[keys].copy()
     new_rows["variable"] = NEWV
     new_rows["value"] = merged["value_surf"] - merged["value_ibwt"]
 
-    # 把新行追加回原数据（原数据不作修改）
+    # concat
     out = pd.concat([df, new_rows], ignore_index=True)
     return out

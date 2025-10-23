@@ -143,30 +143,6 @@ def add_act_bound_exsiting(scen: message_ix.Scenario) -> None:
         scen.add_par("bound_activity_up", bound_act_up_df)
 
 
-def sa_oth_water_demand(scen: message_ix.Scenario) -> None:
-    '''
-    Sensitivity Analysis: change water demand other than irrigation
-    including industry, municipal(urban, rural)
-    Warning: municipal water demand↑ may increase xxx investment cost
-    Warning: need to calculate a certain value instead of a ratio
-    to control total water demand (irrigation + others) at the basin-level
-    '''
-    water_receive_node = ["35|CHN", "162|CHN", "62|CHN",
-                          "148|CHN", "96|AFR", "96|MEA", "97|NAM", "125|LAM"]
-    old_wat_de = scen.par("demand", filters={"level": ["final"],
-                                             "commodity": ["urban_mw", "urban_disconnected",
-                                                           "rural_mw", "rural_disconnected",
-                                                           "industry_mw"],
-                                             "node": ['B'+x for x in water_receive_node]})
-    with scen.transact("Remove old other water demand"):
-        scen.remove_par("demand", old_wat_de)
-
-    new_wat_de = old_wat_de.copy()
-    new_wat_de["value"] = old_wat_de["value"] * 1.5
-    with scen.transact("Add new other water demand"):
-        scen.add_par("demand", new_wat_de)
-
-
 def cal_all_water_demand(scen: message_ix.Scenario) -> pd.DataFrame:
     '''
     irrigation & industry & municipal
@@ -244,6 +220,9 @@ def cascade_deduct_water_demand(row,
                                 order=('industry_mw', 'rural_mw', 'urban_mw'),
                                 delta_col='delta',
                                 suffix=''):
+    '''
+    Remove water demand in order: industry, rural, urban
+    '''
     # check delta
     remaining = row.get(delta_col, 0)
     if pd.isna(remaining) or remaining < 0:
@@ -274,6 +253,10 @@ def cascade_deduct_water_demand(row,
 
 
 def sa_rem_oth_water_demand(scen: message_ix.Scenario, ratio: float) -> None:
+    '''
+    Sensitivity Analysis: remove water demand from industry, urban, rural
+    at the basin level
+    '''
     if ratio >= 1:
         raise ValueError("The parameter 'ratio' must be lower than 1.")
 

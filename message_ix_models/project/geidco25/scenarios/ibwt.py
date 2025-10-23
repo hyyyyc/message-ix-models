@@ -148,7 +148,7 @@ def sa_oth_water_demand(scen: message_ix.Scenario) -> None:
     Sensitivity Analysis: change water demand other than irrigation
     including industry, municipal(urban, rural)
     Warning: municipal water demand↑ may increase xxx investment cost
-    Warning: need to calculate a certain value instead of a ratio 
+    Warning: need to calculate a certain value instead of a ratio
     to control total water demand (irrigation + others) at the basin-level
     '''
     water_receive_node = ["35|CHN", "162|CHN", "62|CHN",
@@ -167,18 +167,10 @@ def sa_oth_water_demand(scen: message_ix.Scenario) -> None:
         scen.add_par("demand", new_wat_de)
 
 
-def sa_add_ind_water_demand(scen: message_ix.Scenario, ratio: float) -> None:
+def cal_all_water_demand(scen: message_ix.Scenario) -> pd.DataFrame:
     '''
-    Sensitivity Analysis: add only industrial water demand
-    to make the variation in water demand less relevant to other sensitive variables 
-    (such as investment)
-    Warning: need to calculate a certain value instead of a ratio 
-    to control total water demand (irrigation + others) at the basin-level
-    Warning: don't use this function for minus industrial water demand
+    irrigation & industry & municipal
     '''
-    if ratio <= 1:
-        raise ValueError("The parameter 'ratio' must be greater than 1.")
-
     water_receive_node = ["35|CHN", "162|CHN", "62|CHN",
                           "148|CHN", "96|AFR", "96|MEA", "97|NAM", "125|LAM"]
     # Calculate all water demand
@@ -203,6 +195,27 @@ def sa_add_ind_water_demand(scen: message_ix.Scenario, ratio: float) -> None:
     # all water demand
     water_demand = pd.concat([irr_wat_re, oth_wat])
 
+    return water_demand
+
+
+def sa_add_ind_water_demand(scen: message_ix.Scenario, ratio: float) -> None:
+    '''
+    Sensitivity Analysis: add only industrial water demand
+    to make the variation in water demand less relevant to other sensitive variables
+    (such as investment)
+    Warning: need to calculate a certain value instead of a ratio
+    to control total water demand (irrigation + others) at the basin-level
+    Warning: don't use this function for minus industrial water demand
+    '''
+    if ratio <= 1:
+        raise ValueError("The parameter 'ratio' must be greater than 1.")
+
+    water_receive_node = ["35|CHN", "162|CHN", "62|CHN",
+                          "148|CHN", "96|AFR", "96|MEA", "97|NAM", "125|LAM"]
+
+    # all water demand
+    water_demand = cal_all_water_demand(scen)
+    # sum up
     water_demand_sta = water_demand.groupby(
         ['node', 'year'], as_index=False)['value'].sum()
     water_demand_sta['value_new'] = water_demand_sta['value']*ratio
@@ -226,10 +239,120 @@ def sa_add_ind_water_demand(scen: message_ix.Scenario, ratio: float) -> None:
         scen.add_par("demand", new_ind_wat)
 
 
+def cascade_deduct_water_demand(row,
+                                # deduct water demand order
+                                order=('industry_mw', 'rural_mw', 'urban_mw'),
+                                delta_col='delta',
+                                suffix=''):
+    # check delta
+    remaining = row.get(delta_col, 0)
+    if pd.isna(remaining) or remaining < 0:
+        remaining = 0.0
+    else:
+        remaining = float(remaining)
+
+    result = {}
+
+    for col in order:
+        # old value for col
+        val = row.get(col, 0)
+        if pd.isna(val):
+            val = 0.0
+        else:
+            val = float(val)
+
+        # deduct value for col (>=0)
+        take = min(val, remaining)
+        new_val = val - take                     # >= 0
+        result[col + suffix] = new_val         # new value after deducting
+        remaining -= take                        # remaining delta
+
+    # remaining delta after deducting from industry, urban and rural water demand
+    result['delta_left'] = remaining
+
+    return pd.Series(result)
+
+
+def sa_rem_oth_water_demand(scen: message_ix.Scenario, ratio: float) -> None:
+    if ratio >= 1:
+        raise ValueError("The parameter 'ratio' must be lower than 1.")
+
+    water_receive_node = ["35|CHN", "162|CHN", "62|CHN",
+                          "148|CHN", "96|AFR", "96|MEA", "97|NAM", "125|LAM"]
+
+    # all water demand
+    water_demand = cal_all_water_demand(scen)
+    # sum up
+    base_id_cols = ['node', 'level', 'year', 'time', 'unit']
+    water_demand_sta = water_demand.groupby(
+        base_id_cols, as_index=False)['value'].sum()
+    water_demand_sta['value_new'] = water_demand_sta['value']*ratio
+    water_demand_sta['value_change'] = water_demand_sta['value'] - \
+        water_demand_sta['value_new']  # >=
+
+    # compare value_change and industrial/municipal water demand
+    water_demand_sta['commodity'] = 'delta'
+    water_demand_sta_re = water_demand_sta[['node',
+                                           'commodity', 'level', 'year', 'time', 'value_change', 'unit']].rename(columns={'value_change': 'value'})
+
+    df_com = pd.concat([water_demand, water_demand_sta_re])
+    df_com_wide = df_com.pivot(index=base_id_cols,
+                               columns='commodity',
+                               values='value').reset_index()
+
+    # cascade deduct from industry, urban, rural water demand
+    df_deduct = pd.concat(
+        [df_com_wide[base_id_cols].reset_index(drop=True),
+         df_com_wide.apply(cascade_deduct_water_demand, axis=1).reset_index(drop=True)],
+        axis=1
+    )
+
+    # Change other water demand
+    old_other_wat = scen.par("demand", filters={"level": ["final"],
+                                                "commodity": ["industry_mw",
+                                                              'urban_mw',
+                                                              'rural_mw'],
+                                                "node": ['B'+x for x in water_receive_node]})
+    with scen.transact("Remove old other water demand"):
+        scen.remove_par("demand", old_other_wat)
+
+    # add new other water demand
+    demand_id_cols = ['node', 'commodity',
+                      'level', 'year', 'time', 'value', 'unit']
+    new_ind_wat = df_deduct.melt(
+        id_vars=base_id_cols,
+        value_vars='industry_mw',
+        var_name='commodity',
+        value_name='value'
+    )
+    new_ind_wat = new_ind_wat[demand_id_cols]
+
+    new_urban_wat = df_deduct.melt(
+        id_vars=base_id_cols,
+        value_vars='urban_mw',
+        var_name='commodity',
+        value_name='value'
+    )
+    new_urban_wat = new_urban_wat[demand_id_cols]
+
+    new_rural_wat = df_deduct.melt(
+        id_vars=base_id_cols,
+        value_vars='rural_mw',
+        var_name='commodity',
+        value_name='value'
+    )
+    new_rural_wat = new_rural_wat[demand_id_cols]
+
+    with scen.transact("Add new other water demand"):
+        scen.add_par("demand", new_ind_wat)
+        scen.add_par("demand", new_urban_wat)
+        scen.add_par("demand", new_rural_wat)
+
+
 def sa_rem_irr_water_demand(scen: message_ix.Scenario, ratio: float) -> None:
     '''
     Sensitivity Analysis: subtract irrigation water demand
-    Warning: irrigation water demand is not at the basin-level
+    Warning: irrigation water demand is at the region-level
     So it's subtracting water demand for both water-supplying and water-receiving basins
     '''
     if ratio >= 1:
@@ -368,7 +491,7 @@ mp = ixmp.Platform(name="ixmp_dev", jvmargs=["-Xmx14G"])
 
 # Source scenario based on existing model in the db
 model_sour = "MixG_GEIDCO5_SSP2_v6.1"
-scen_sour = "Base_RCP7_noint_IBWT_t3"
+scen_sour = "Base_RCP7_noint_IBWT_t4"
 sour_scen = message_ix.Scenario(mp, model=model_sour, scenario=scen_sour)
 
 

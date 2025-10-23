@@ -332,15 +332,12 @@ def sa_rem_oth_water_demand(scen: message_ix.Scenario, ratio: float) -> None:
         scen.add_par("demand", new_rural_wat)
 
 
-def sa_rem_irr_water_demand(scen: message_ix.Scenario, ratio: float) -> None:
+def sa_irr_water_demand(scen: message_ix.Scenario, ratio: float) -> None:
     '''
-    Sensitivity Analysis: subtract irrigation water demand
-    Warning: irrigation water demand is at the region-level
-    So it's subtracting water demand for both water-supplying and water-receiving basins
+    Sensitivity Analysis: water demand at the region-level
+    add/subtract irrigation water demand
+    it's subtracting water demand for both water-supplying and water-receiving basins
     '''
-    if ratio >= 1:
-        raise ValueError("The parameter 'ratio' must be lower than 1.")
-
     old_irr_de = scen.par("land_input", filters={"commodity": "freshwater"})
     with scen.transact("Remove old irrigation demand"):
         scen.remove_par("land_input", old_irr_de)

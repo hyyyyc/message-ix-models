@@ -54,7 +54,7 @@ basin_mapping = {
     'B162|CHN': 'Ziya He Interior',
     'B62|CHN': 'Huang He',
     'B38|AFR': 'Congo',
-    'B96|AFR': 'Nile',
+    'B96|AFR': 'Nile AFR',
     'B96|MEA': 'Nile',
     'B53|CHN': 'Ganges Bramaputra',
     'B148|CHN': 'Tarim Interior',
@@ -74,8 +74,21 @@ supply_basins = ["Yangtze", "Ganges Bramaputra",
                  "Congo", "Mississippi", "Amazon"]
 
 scen_name_dict = {
-    'Base_RCP7_noint_noIBWT_t4': 'RCP7.0 baseline'
+    'Base_RCP7_noint_noIBWT_t4': 'RCP7.0 BAU',
+    'Base_RCP7_noint_IBWT_t4': 'RCP7.0 IBWT',
+    'Base_RCP7_intnew_noIBWT_t4': 'RCP7.0 GEI',
+    'Base_RCP7_intnew_IBWT_t4': 'RCP7.0 GEI&IBWT',
+    # 'Base_RCP7_int_noIBWT_t4': 'RCP7.0 GEI',
+    # 'Base_RCP7_int_IBWT_t4': 'RCP7.0 GEI&IBWT',
+    'EN1000f_RCP26_noint_noIBWT_t4': 'Mitigation BAU',
+    'EN1000f_RCP26_noint_IBWT_t4': 'Mitigation IBWT',
+    'EN1000f_RCP26_intnew_noIBWT_t4': 'Mitigation GEI',
+    'EN1000f_RCP26_intnew_IBWT_t4': 'Mitigation GEI&IBWT'
+    # 'EN1000f_RCP26_int_noIBWT_t4': 'Mitigation GEI',
+    # 'EN1000f_RCP26_int_IBWT_t4': 'Mitigation GEI&IBWT'
 }
+
+superscript_map = str.maketrans("3", "³")
 
 # Designed capacity
 df_designed_cap = pd.DataFrame({
@@ -88,10 +101,11 @@ def stan_data_stru(df: pd.DataFrame) -> pd.DataFrame:
     """
     Standardize data structure:
     1. Standardize column names
-    2. Wide to long
-    3. Change data type
-    4. Convert unit
-    5. Standardize region name
+    2. Remove NA in region column
+    3. Wide to long
+    4. Change data type
+    5. Convert unit
+    6. Standardize region name
     """
     # lowercase first letter
     new_columns = []
@@ -101,6 +115,10 @@ def stan_data_stru(df: pd.DataFrame) -> pd.DataFrame:
         else:
             new_columns.append(col)
     df.columns = new_columns
+
+    # drop row if NA in region column
+    # becasue some bugs when running gei reporting with nexus scenario
+    df = df.dropna(subset=["region"])
 
     # wide to long, if necessary
     if "value" not in df.columns:
@@ -123,7 +141,7 @@ def stan_data_stru(df: pd.DataFrame) -> pd.DataFrame:
     df_long['year'] = df_long['year'].astype(int)
 
     # MCM/yr to km3/yr
-    mask = df_long['unit'] == 'MCM/yr'
+    mask = df_long["unit"].isin(["MCM/yr", "MCM"])
     df_long.loc[mask, 'value'] = df_long.loc[mask, 'value'] / 1000
     df_long.loc[mask, 'unit'] = 'km3/yr'
 
@@ -135,6 +153,18 @@ def stan_data_stru(df: pd.DataFrame) -> pd.DataFrame:
         lambda x: region_mapping.get(x, x))
 
     return df_long
+
+
+def drop_all_zero_rows(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    If all values for the same scenario, region and variable are 0,
+    drop these data
+    filter scenarios without water transfer
+    filter routes without water transfer
+    """
+    mask = df.groupby(['scenario', 'region', 'variable'])[
+        'value'].transform(lambda x: (x.fillna(0) != 0).any())
+    return df[mask].reset_index(drop=True)
 
 
 def filter_series_labels_colors(energy_df, energy_vars, labels):
